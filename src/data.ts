@@ -38,7 +38,7 @@ export const TABS: Tab[] = [
     title: 'About me',
     kind: 'Software Developer',
     year: 'London',
-    url: 'yavuzsever.dev/about',
+    url: 'yavuzselimsever.com/about',
     description:
       'I’m a Software Developer based in London, interested in building software that solves practical problems and makes complex workflows easier to use.',
     meta: [
@@ -75,7 +75,7 @@ export const TABS: Tab[] = [
     title: 'Experience',
     kind: 'Software Developer',
     year: 'May 2026 — now',
-    url: 'yavuzsever.dev/experience',
+    url: 'yavuzselimsever.com/experience',
     description: 'I build software around real operational problems.',
     meta: [
       ['Role', 'Software Developer'],

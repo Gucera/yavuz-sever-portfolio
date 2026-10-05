@@ -7,14 +7,40 @@ declare global {
 
 // GA4 measurement IDs are public (they ship in the page), so the default lives here.
 const DEFAULT_GA_ID = 'G-T6VELC532W'
+const CONSENT_KEY = 'analytics-consent'
 
-/**
- * Loads Google Analytics 4 in production builds. VITE_GA_ID overrides the ID;
- * the dev server never loads it, so local testing stays untracked.
- */
+export type Consent = 'granted' | 'denied'
+
+/** The GA ID for this build: VITE_GA_ID overrides; the dev server has none, so local testing stays untracked. */
+export function gaId() {
+  return (import.meta.env.VITE_GA_ID as string | undefined) || (import.meta.env.PROD ? DEFAULT_GA_ID : undefined)
+}
+
+export function getConsent(): Consent | null {
+  try {
+    const v = localStorage.getItem(CONSENT_KEY)
+    return v === 'granted' || v === 'denied' ? v : null
+  } catch {
+    return null
+  }
+}
+
+export function setConsent(value: Consent) {
+  try {
+    localStorage.setItem(CONSENT_KEY, value)
+  } catch {
+    // storage blocked (private mode etc.) — the choice just isn't remembered
+  }
+  if (value === 'granted') initGoogleAnalytics()
+}
+
+let loaded = false
+
+/** Loads Google Analytics 4. Only called once the visitor has accepted analytics cookies. */
 export function initGoogleAnalytics() {
-  const id = (import.meta.env.VITE_GA_ID as string | undefined) || (import.meta.env.PROD ? DEFAULT_GA_ID : undefined)
-  if (!id) return
+  const id = gaId()
+  if (!id || loaded) return
+  loaded = true
 
   window.dataLayer = window.dataLayer || []
   window.gtag = function gtag() {
