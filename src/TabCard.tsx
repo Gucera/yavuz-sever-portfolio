@@ -1,4 +1,4 @@
-import { forwardRef, type CSSProperties, type KeyboardEvent, type MouseEvent } from 'react'
+import { forwardRef, useRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
 import type { Tab } from './data'
 import { EducationBody } from './Education'
 import { AboutBody } from './About'
@@ -18,6 +18,8 @@ type Props = {
   hidden: boolean
   /** behind the front tab in the stack — only the tab bar reads */
   back: boolean
+  /** hovered / touched in the stack — reveals the tab's content */
+  peek: boolean
   onHover: (on: boolean) => void
   onOpen: () => void
   onX: (e: MouseEvent) => void
@@ -25,7 +27,7 @@ type Props = {
 }
 
 export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
-  { tab, num, style, isOpen, animate, hidden, back, onHover, onOpen, onX, onNext },
+  { tab, num, style, isOpen, animate, hidden, back, peek, onHover, onOpen, onX, onNext },
   ref,
 ) {
   const onKey = (e: KeyboardEvent) => {
@@ -33,6 +35,22 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
       e.preventDefault()
       onOpen()
     }
+  }
+
+  // Touch: the peek starts the moment a finger lands. Releasing pointer capture lets
+  // pointerenter/leave follow the finger across the stack; a long press only previews.
+  const downAt = useRef(0)
+  const onPointerDown = (e: PointerEvent) => {
+    downAt.current = e.timeStamp
+    if (e.pointerType !== 'mouse' && !isOpen) {
+      const el = e.target as Element
+      if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId)
+      onHover(true)
+    }
+  }
+  const onTap = (e: MouseEvent) => {
+    if (e.timeStamp - downAt.current > 450) return
+    onOpen()
   }
 
   const meta = (
@@ -54,11 +72,14 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
   return (
     <div
       ref={ref}
-      className={`card${animate ? ' card--anim' : ''}${back ? ' card--back' : ''}`}
+      className={`card${animate ? ' card--anim' : ''}${back ? ' card--back' : ''}${peek ? ' card--peek' : ''}`}
       style={style}
-      onClick={isOpen ? undefined : onOpen}
-      onMouseEnter={() => onHover(true)}
-      onMouseLeave={() => onHover(false)}
+      onClick={isOpen ? undefined : onTap}
+      onPointerDown={onPointerDown}
+      onPointerEnter={() => onHover(true)}
+      onPointerLeave={() => onHover(false)}
+      onPointerCancel={() => onHover(false)}
+      onContextMenu={(e) => !isOpen && e.preventDefault()}
       onKeyDown={onKey}
       role={isOpen ? 'dialog' : 'button'}
       aria-modal={isOpen || undefined}

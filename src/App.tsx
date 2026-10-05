@@ -22,6 +22,55 @@ function useViewport(): Viewport {
   return vp
 }
 
+const clamp1 = (v: number) => Math.max(-1, Math.min(1, v))
+
+type OrientationPermission = { requestPermission?: () => Promise<'granted' | 'denied'> }
+let tiltGranted = false
+
+/**
+ * Calls `onTilt` with x/y in -1…1 as the phone tilts, relative to how it's being held
+ * (the neutral pose slowly re-centres). iOS needs permission from a user gesture, so the
+ * first touch asks for it. Returns a cleanup function.
+ */
+function listenToDeviceTilt(onTilt: (x: number, y: number) => void) {
+  let base: { x: number; y: number } | null = null
+  const onOrient = (e: DeviceOrientationEvent) => {
+    if (e.gamma == null || e.beta == null) return
+    const angle = screen.orientation?.angle ?? 0
+    let x = e.gamma
+    let y = e.beta
+    if (angle === 90) [x, y] = [e.beta, -e.gamma]
+    else if (angle === 270 || angle === -90) [x, y] = [-e.beta, e.gamma]
+    else if (angle === 180) [x, y] = [-e.gamma, -e.beta]
+    base ??= { x, y }
+    base.x += (x - base.x) * 0.02
+    base.y += (y - base.y) * 0.02
+    onTilt(clamp1((x - base.x) / 25), clamp1((y - base.y) / 25))
+  }
+  const listen = () => window.addEventListener('deviceorientation', onOrient)
+  const DOE = window.DeviceOrientationEvent as unknown as OrientationPermission | undefined
+  let ask: (() => void) | undefined
+
+  if (!DOE) return () => {}
+  if (typeof DOE.requestPermission !== 'function' || tiltGranted) listen()
+  else {
+    ask = () => {
+      DOE.requestPermission!()
+        .then((state) => {
+          if (state !== 'granted') return
+          tiltGranted = true
+          listen()
+        })
+        .catch(() => {})
+    }
+    window.addEventListener('pointerup', ask, { once: true })
+  }
+  return () => {
+    window.removeEventListener('deviceorientation', onOrient)
+    if (ask) window.removeEventListener('pointerup', ask)
+  }
+}
+
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export default function App() {
@@ -75,10 +124,10 @@ export default function App() {
     return () => ctx.revert()
   }, [openIdx])
 
-  // Subtle 3D tilt of the whole stack following the pointer (mouse devices only).
+  // Subtle 3D tilt of the whole stack: follows the mouse on desktop, the phone's tilt on touch devices.
   useEffect(() => {
     const stack = stackRef.current
-    if (!stack || reducedMotion() || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
+    if (!stack || reducedMotion()) return
     gsap.set(stack, { transformPerspective: 1800, transformOrigin: '50% 30%' })
     if (openIdx !== -1) {
       gsap.to(stack, { rotationX: 0, rotationY: 0, duration: 0.6, ease: 'power3.out' })
@@ -86,20 +135,28 @@ export default function App() {
     }
     const rx = gsap.quickTo(stack, 'rotationX', { duration: 0.9, ease: 'power3.out' })
     const ry = gsap.quickTo(stack, 'rotationY', { duration: 0.9, ease: 'power3.out' })
-    const onMove = (e: PointerEvent) => {
-      ry((e.clientX / window.innerWidth - 0.5) * 5)
-      rx(-(e.clientY / window.innerHeight - 0.5) * 3)
+
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      const onMove = (e: PointerEvent) => {
+        ry((e.clientX / window.innerWidth - 0.5) * 5)
+        rx(-(e.clientY / window.innerHeight - 0.5) * 3)
+      }
+      const onLeave = () => {
+        rx(0)
+        ry(0)
+      }
+      window.addEventListener('pointermove', onMove)
+      document.addEventListener('pointerleave', onLeave)
+      return () => {
+        window.removeEventListener('pointermove', onMove)
+        document.removeEventListener('pointerleave', onLeave)
+      }
     }
-    const onLeave = () => {
-      rx(0)
-      ry(0)
-    }
-    window.addEventListener('pointermove', onMove)
-    document.addEventListener('pointerleave', onLeave)
-    return () => {
-      window.removeEventListener('pointermove', onMove)
-      document.removeEventListener('pointerleave', onLeave)
-    }
+
+    return listenToDeviceTilt((x, y) => {
+      ry(x * 6)
+      rx(-y * 4)
+    })
   }, [openIdx])
 
   const close = useCallback(() => setOpenIdx(-1), [])
@@ -170,6 +227,7 @@ export default function App() {
             animate={introDone}
             hidden={isGone || (openIdx > -1 && !self)}
             back={openIdx === -1 && !isGone && v !== n - 1}
+            peek={openIdx === -1 && hoverIdx === i}
             onHover={(on) => setHoverIdx((h) => (on ? i : h === i ? -1 : h))}
             onOpen={() => {
               if (openIdx === -1) setOpenIdx(i)

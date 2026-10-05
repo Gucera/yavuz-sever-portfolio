@@ -2024,7 +2024,7 @@ a {
   opacity: 0;
 }
 
-.card--back:hover .card__page > :not(.card__bar) {
+.card--back.card--peek .card__page > :not(.card__bar) {
   opacity: 1;
 }
 
@@ -2208,4 +2208,12 @@ a {
   .header__name {
     font-size: 30px;
   }
+}
+
+/* touch: no scrolling/callouts on stacked tabs so a finger can slide across them */
+.stack .card[role='button'] {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
