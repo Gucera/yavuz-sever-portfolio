@@ -5,12 +5,15 @@ declare global {
   }
 }
 
+// GA4 measurement IDs are public (they ship in the page), so the default lives here.
+const DEFAULT_GA_ID = 'G-T6VELC532W'
+
 /**
- * Loads Google Analytics 4 when VITE_GA_ID (e.g. G-XXXXXXXXXX) is set at build time.
- * Without it nothing is loaded, so local builds and previews stay untracked.
+ * Loads Google Analytics 4 in production builds. VITE_GA_ID overrides the ID;
+ * the dev server never loads it, so local testing stays untracked.
  */
 export function initGoogleAnalytics() {
-  const id = import.meta.env.VITE_GA_ID as string | undefined
+  const id = (import.meta.env.VITE_GA_ID as string | undefined) || (import.meta.env.PROD ? DEFAULT_GA_ID : undefined)
   if (!id) return
 
   window.dataLayer = window.dataLayer || []
