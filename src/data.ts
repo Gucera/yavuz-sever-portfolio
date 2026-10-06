@@ -24,6 +24,7 @@ export const PROFILE = {
   name: 'Yavuz Selim Sever',
   role: 'software developer · london',
   email: 'yavuzslm057@gmail.com',
+  cv: '/Yavuz_Selim_Sever_CV.pdf',
   socials: [
     ['GitHub', 'https://github.com/Gucera'],
     ['LinkedIn', 'https://www.linkedin.com/in/yavuz-sever-12361b190'],

@@ -38,17 +38,32 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
   }
 
   // Touch: the peek starts the moment a finger lands. Releasing pointer capture lets
-  // pointerenter/leave follow the finger across the stack; a long press only previews.
+  // pointerenter/leave follow the finger across the stack. Opening is decided on finger-up
+  // (short press, barely moved) rather than by `click`, because the peek shifts the cards
+  // under the finger and the browser would otherwise drop the click.
   const downAt = useRef(0)
+  const lastTouch = useRef(-Infinity)
   const onPointerDown = (e: PointerEvent) => {
     downAt.current = e.timeStamp
-    if (e.pointerType !== 'mouse' && !isOpen) {
-      const el = e.target as Element
-      if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId)
-      onHover(true)
+    if (e.pointerType === 'mouse' || isOpen) return
+    lastTouch.current = e.timeStamp
+    const el = e.target as Element
+    if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId)
+    onHover(true)
+
+    const { clientX: x0, clientY: y0, timeStamp: t0, pointerId } = e
+    const finish = (ev: globalThis.PointerEvent) => {
+      if (ev.pointerId !== pointerId) return
+      window.removeEventListener('pointerup', finish)
+      window.removeEventListener('pointercancel', finish)
+      const tap = ev.type === 'pointerup' && ev.timeStamp - t0 < 450 && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 14
+      if (tap) onOpen()
     }
+    window.addEventListener('pointerup', finish)
+    window.addEventListener('pointercancel', finish)
   }
   const onTap = (e: MouseEvent) => {
+    if (e.timeStamp - lastTouch.current < 1000) return // already handled on finger-up
     if (e.timeStamp - downAt.current > 450) return
     onOpen()
   }

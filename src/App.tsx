@@ -43,9 +43,9 @@ function listenToDeviceTilt(onTilt: (x: number, y: number) => void) {
     else if (angle === 270 || angle === -90) [x, y] = [-e.beta, e.gamma]
     else if (angle === 180) [x, y] = [-e.gamma, -e.beta]
     base ??= { x, y }
-    base.x += (x - base.x) * 0.02
-    base.y += (y - base.y) * 0.02
-    onTilt(clamp1((x - base.x) / 25), clamp1((y - base.y) / 25))
+    base.x += (x - base.x) * 0.005
+    base.y += (y - base.y) * 0.005
+    onTilt(clamp1((x - base.x) / 18), clamp1((y - base.y) / 18))
   }
   const listen = () => window.addEventListener('deviceorientation', onOrient)
   const DOE = window.DeviceOrientationEvent as unknown as OrientationPermission | undefined
@@ -71,11 +71,22 @@ function listenToDeviceTilt(onTilt: (x: number, y: number) => void) {
   }
 }
 
+export const tabSlug = (title: string) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+
+const tabFromHash = () => {
+  const slug = decodeURIComponent(location.hash.slice(1))
+  return slug ? TABS.findIndex((t) => tabSlug(t.title) === slug) : -1
+}
+
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export default function App() {
   const vp = useViewport()
-  const [openIdx, setOpenIdx] = useState(-1)
+  const [openIdx, setOpenIdx] = useState(tabFromHash)
   const [gone, setGone] = useState<number[]>([])
   const [introDone, setIntroDone] = useState(false)
   const [hoverIdx, setHoverIdx] = useState(-1)
@@ -154,20 +165,48 @@ export default function App() {
     }
 
     return listenToDeviceTilt((x, y) => {
-      ry(x * 6)
-      rx(-y * 4)
+      ry(x * 14)
+      rx(-y * 9)
     })
   }, [openIdx])
 
   const close = useCallback(() => setOpenIdx(-1), [])
 
+  // Escape closes; ←/→ step through the tabs (→ from the stack opens the first one).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close()
+      if (e.key === 'Escape') return close()
+      if ((e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') || e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return
+      const pos = visible.indexOf(openIdx)
+      const nextPos = pos === -1 ? (e.key === 'ArrowRight' ? 0 : -1) : pos + (e.key === 'ArrowRight' ? 1 : -1)
+      if (nextPos < 0 || nextPos >= visible.length) return
+      e.preventDefault()
+      setOpenIdx(visible[nextPos])
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [close])
+  }, [close, openIdx, visible])
+
+  // Every tab has its own link (#quick-label…): keep the URL, title and history in sync,
+  // so shared links open the right tab and the browser/phone back button closes it.
+  useEffect(() => {
+    const tab = TABS[openIdx]
+    const want = tab ? `#${tabSlug(tab.title)}` : ''
+    document.title = tab ? `${tab.title} — ${PROFILE.name}` : `${PROFILE.name} — Portfolio`
+    if (location.hash !== want) history.pushState(null, '', want || location.pathname + location.search)
+    if (tab && typeof window.gtag === 'function') window.gtag('event', 'open_tab', { tab_name: tab.title })
+  }, [openIdx])
+
+  useEffect(() => {
+    const onPop = () => {
+      const idx = tabFromHash()
+      if (idx !== -1) setGone((g) => g.filter((x) => x !== idx))
+      setOpenIdx(idx)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
 
   // Closed tabs come back scrolled to the top.
   useEffect(() => {
@@ -204,7 +243,10 @@ export default function App() {
           </nav>
           <div className="header__row">
             <span>{n} tabs open</span>
-          <a href={`mailto:${PROFILE.email}`}>{PROFILE.email}</a>
+            <a href={PROFILE.cv} download>
+              CV ↓
+            </a>
+            <a href={`mailto:${PROFILE.email}`}>{PROFILE.email}</a>
           </div>
         </div>
       </div>
