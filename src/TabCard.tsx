@@ -41,10 +41,8 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
   // pointerenter/leave follow the finger across the stack. Opening is decided on finger-up
   // (short press, barely moved) rather than by `click`, because the peek shifts the cards
   // under the finger and the browser would otherwise drop the click.
-  const downAt = useRef(0)
   const lastTouch = useRef(-Infinity)
   const onPointerDown = (e: PointerEvent) => {
-    downAt.current = e.timeStamp
     if (e.pointerType === 'mouse' || isOpen) return
     lastTouch.current = e.timeStamp
     const el = e.target as Element
@@ -63,8 +61,7 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
     window.addEventListener('pointercancel', finish)
   }
   const onTap = (e: MouseEvent) => {
-    if (e.timeStamp - lastTouch.current < 1000) return // already handled on finger-up
-    if (e.timeStamp - downAt.current > 450) return
+    if (e.timeStamp - lastTouch.current < 1000) return // touch: already handled on finger-up
     onOpen()
   }
 
