@@ -22,6 +22,8 @@ type Props = {
   peek: boolean
   /** a project case study (lives in the grid's folder) */
   project: boolean
+  /** cards view: the playing card this tab was dealt as, e.g. { rank: 'K', suit: '♠' } */
+  pip?: { rank: string; suit: string }
   onHover: (on: boolean) => void
   onOpen: () => void
   onX: (e: MouseEvent) => void
@@ -32,7 +34,7 @@ type Props = {
 let touchDown = false
 
 export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
-  { tab, num, style, isOpen, animate, hidden, back, peek, project, onHover, onOpen, onX, onNext },
+  { tab, num, style, isOpen, animate, hidden, back, peek, project, pip, onHover, onOpen, onX, onNext },
   ref,
 ) {
   const onKey = (e: KeyboardEvent) => {
@@ -114,6 +116,18 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
       tabIndex={hidden ? -1 : 0}
     >
       {/* full-size label for the grid view, where the page itself is a small thumbnail */}
+      {pip && (
+        <>
+          <span className={`card__pip${pip.suit === '♥' || pip.suit === '♦' ? ' is-red' : ''}`} aria-hidden>
+            {pip.rank}
+            <i>{pip.suit}</i>
+          </span>
+          <span className={`card__pip card__pip--br${pip.suit === '♥' || pip.suit === '♦' ? ' is-red' : ''}`} aria-hidden>
+            {pip.rank}
+            <i>{pip.suit}</i>
+          </span>
+        </>
+      )}
       <span className="card__chip" aria-hidden>
         <i style={{ background: tab.bg }} />
         {tab.title}

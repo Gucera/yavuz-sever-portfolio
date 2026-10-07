@@ -50,6 +50,20 @@ const VIEWS: [ViewMode, string, string][] = [
   ['cards', '♠', 'Cards'],
 ]
 
+const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+const SUITS = ['♠', '♥', '♦', '♣']
+
+/**
+ * Deals every tab a different playing card at random (no jokers). About me is always the
+ * King of Spades — in the cards view its preview shows a king instead of the portrait.
+ */
+const dealHand = () => {
+  const deck = RANKS.flatMap((rank) => SUITS.map((suit) => ({ rank, suit })))
+    .filter((c) => !(c.rank === 'K' && c.suit === '♠'))
+    .sort(() => Math.random() - 0.5)
+  return TABS.map((t, i) => (t.extra === 'about' ? { rank: 'K', suit: '♠' } : deck[i]))
+}
+
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export default function App() {
@@ -66,6 +80,7 @@ export default function App() {
   const [folderRaised, setFolderRaised] = useState(false)
   // cards view: the tab being dealt onto the table (-1 when none)
   const [dealing, setDealing] = useState(-1)
+  const [hand, setHand] = useState(dealHand) // playing cards shown on the tabs in the cards view
   const skipReveal = useRef(false) // a dealt card opens in place: don't replay the content reveal
   const flightFrom = useRef<React.CSSProperties[] | null>(null)
 
@@ -107,6 +122,7 @@ export default function App() {
   const toggleView = (next: ViewMode) => {
     if (openIdx !== -1 || flying || dealing !== -1 || next === view) return
     if (folderOpen) setFolderOpen(false)
+    if (next === 'cards') setHand(dealHand()) // a fresh, random hand every time
     if (!reducedMotion()) {
       flightFrom.current = TABS.map((_, i) => cardStyle(vp, { ...slotOf(i), hoverV: -1 }, view))
       setFlying(true)
@@ -305,7 +321,7 @@ export default function App() {
     gsap.set(page, { width: vp.w, minHeight: vp.h, y: pt, scale: from.width / vp.w, transformOrigin: '0 0' })
     apply()
 
-    const tableEl = stackRef.current?.querySelector<HTMLElement>('.table') ?? null
+    const tableEl = stageRef.current?.querySelector<HTMLElement>('.table') ?? null
     const tl = gsap.timeline({
       onComplete: () => {
         // Hand over to the real open tab in the same frame: it has the same size, layout and
@@ -425,6 +441,8 @@ export default function App() {
       className={`stage stage--${view}${flying ? ' stage--flying' : ''}${landing ? ' stage--landing' : ''}${folderOpen ? ' stage--folder-open' : ''}${dealing !== -1 ? ' stage--dealing' : ''}`}
       ref={stageRef}
     >
+      {/* card table: behind everything, zoomed on its own when a card is dealt */}
+      {view === 'cards' && <div className="table" aria-hidden />}
       <div className="header" style={{ left: pad, right: pad }} aria-hidden={openIdx > -1 || undefined}>
         <div className="header__id">
           <h1 className="header__name" aria-label={PROFILE.name}>
@@ -472,7 +490,6 @@ export default function App() {
       </div>
 
       <div className="stack" ref={stackRef}>
-      {view === 'cards' && <div className="table" aria-hidden />}
       {view === 'grid' && projectTabs.length > 0 && (() => {
         const geo = gridGeometry(vp, plainTabs.length, projectTabs.length)
         const r = folderOpen ? geo.panel : geo.folder
@@ -521,6 +538,7 @@ export default function App() {
             num={String(i + 1).padStart(2, '0')}
             style={cardStyle(vp, slotOf(i), view)}
             project={isProject(tab)}
+            pip={view === 'cards' ? hand[i] : undefined}
             isOpen={self}
             animate={introDone && !flying && dealing === -1}
             hidden={isGone || (openIdx > -1 && !self)}

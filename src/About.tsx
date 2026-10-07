@@ -26,6 +26,8 @@ export function AboutBody({ tab, meta, next }: Props) {
         </div>
         <div className="media exp__photo about__photo" data-reveal>
           <img src="/assets/portrait.webp" alt="Portrait of Yavuz Selim Sever" width={1254} height={1254} />
+          {/* easter egg: in the cards view this preview shows the King of Spades */}
+          <img className="about__king" src="/assets/king.png" alt="" aria-hidden width={213} height={340} />
         </div>
       </div>
 

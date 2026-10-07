@@ -2761,3 +2761,95 @@ a {
   outline-color: transparent !important;
   transition: outline-color 0.45s var(--ease) !important;
 }
+
+/* ---------- cards view: corner indices and the king easter egg ---------- */
+
+.card__pip {
+  position: absolute;
+  z-index: 6;
+  top: 40px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 30px;
+  padding: 5px 5px 4px;
+  border-radius: 6px;
+  background: #f3efe4;
+  color: #111;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+  pointer-events: none;
+}
+
+.card__pip i {
+  font-style: normal;
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+.card__pip.is-red {
+  color: #c8102e;
+}
+
+.card__pip--br {
+  top: auto;
+  left: auto;
+  right: 8px;
+  bottom: 8px;
+  transform: rotate(180deg);
+}
+
+.stage--cards:not(.stage--flying) .card[role='button']:not([data-camera]) .card__pip {
+  opacity: 1;
+}
+
+.about__photo {
+  position: relative;
+}
+
+.about__king {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f4f1e8;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease);
+  pointer-events: none;
+}
+
+.stage--cards .card[role='button'] .about__king {
+  opacity: 1;
+}
+
+/* as the camera comes down on the About card, the king gives way to the real portrait */
+.stage--cards .card[data-camera] .about__king {
+  opacity: 0;
+}
+
+@media (max-width: 767px) {
+  .card__pip {
+    top: 30px;
+    left: 5px;
+    min-width: 20px;
+    padding: 3px 3px 2px;
+    font-size: 13px;
+    border-radius: 4px;
+  }
+  .card__pip i {
+    font-size: 12px;
+  }
+  .card__pip--br {
+    top: auto;
+    left: auto;
+    right: 5px;
+    bottom: 5px;
+  }
+}
