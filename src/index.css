@@ -2856,7 +2856,7 @@ a {
   }
 }
 
-/* cards view: rightward cards overlap leftward ones once the hand has landed */
+/* cards view: leftward cards (About me first) overlap rightward ones once the hand has landed */
 .stage--cards:not(.stage--flying):not(.stage--dealing) .card[role='button'] {
   z-index: var(--hz) !important;
 }

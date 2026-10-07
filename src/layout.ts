@@ -273,9 +273,9 @@ function handStyle(vp: Viewport, { v, n, openV, hoverV, gone, cards }: Slot): CS
   const s: CSSProperties = {
     ...pageVars(pageWidth(vp), ps, gridBarHeight(vp) - pageBarHeight(vp) * ps),
     ['--fa' as string]: `${c.angle}deg`,
-    // like a real hand, each card overlaps the one to its left so every corner index shows;
+    // About me sits on top and each card to its right tucks under the one before it;
     // applied only once the hand has landed (see index.css), so nothing jumps mid-flight
-    ['--hz' as string]: onTable ? cards!.t + 1 : r + 20,
+    ['--hz' as string]: onTable ? cards!.t + 1 : (cards ? cards.n : n) - r + 20,
     zIndex: v + 1,
     top: c.top,
     left: c.left,
