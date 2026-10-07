@@ -204,7 +204,7 @@ function gridStyle(vp: Viewport, { v, openV, hoverV, gone, grid }: Slot): CSSPro
 
 /** Playing-card size for the cards view (portrait, 5:7). */
 const handCardSize = (vp: Viewport) => {
-  const ch = vp.mobile ? clamp(vp.h * 0.36, 190, 280) : clamp(vp.h * 0.5, 260, 440)
+  const ch = vp.mobile ? clamp(vp.h * 0.3, 170, 236) : clamp(vp.h * 0.5, 260, 440)
   return { cw: ch / 1.4, ch }
 }
 
@@ -215,9 +215,9 @@ const handCardSize = (vp: Viewport) => {
  */
 export function handCard(vp: Viewport, r: number, n: number) {
   const { cw, ch } = handCardSize(vp)
-  const R = vp.mobile ? vp.w * 1.35 : clamp(vp.w * 0.75, 700, 1150)
+  const R = vp.mobile ? vp.w * 0.95 : clamp(vp.w * 0.75, 700, 1150)
   const reach = vp.w / 2 - cw / 2 - (vp.mobile ? 6 : 40)
-  const spread = n > 1 ? Math.min(vp.mobile ? 34 : 56, (2 * Math.asin(clamp(reach / R, 0, 1)) * 180) / Math.PI) : 0
+  const spread = n > 1 ? Math.min(vp.mobile ? 40 : 56, (2 * Math.asin(clamp(reach / R, 0, 1)) * 180) / Math.PI) : 0
   const angle = n > 1 ? -spread / 2 + (r * spread) / (n - 1) : 0
   const a = (angle * Math.PI) / 180
   const topCentre = vp.h - ch - (vp.mobile ? 26 : 40) // where the middle card's top sits
@@ -240,6 +240,9 @@ function handStyle(vp: Viewport, { v, n, openV, hoverV, gone }: Slot): CSSProper
   const s: CSSProperties = {
     ...pageVars(pageWidth(vp), ps, gridBarHeight(vp) - pageBarHeight(vp) * ps),
     ['--fa' as string]: `${c.angle}deg`,
+    // like a real hand, each card overlaps the one to its left so every corner index shows;
+    // applied only once the hand has landed (see index.css), so nothing jumps mid-flight
+    ['--hz' as string]: r + 1,
     zIndex: v + 1,
     top: c.top,
     left: c.left,

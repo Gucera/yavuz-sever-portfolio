@@ -116,20 +116,22 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
       tabIndex={hidden ? -1 : 0}
     >
       {/* full-size label for the grid view, where the page itself is a small thumbnail */}
+      {/* cards view: the bottom-right index; the top-left one sits in the tab bar below */}
       {pip && (
-        <>
-          <span className={`card__pip${pip.suit === '♥' || pip.suit === '♦' ? ' is-red' : ''}`} aria-hidden>
-            {pip.rank}
-            <i>{pip.suit}</i>
-          </span>
-          <span className={`card__pip card__pip--br${pip.suit === '♥' || pip.suit === '♦' ? ' is-red' : ''}`} aria-hidden>
-            {pip.rank}
-            <i>{pip.suit}</i>
-          </span>
-        </>
+        <span className={`card__pip card__pip--br${pip.suit === '♥' || pip.suit === '♦' ? ' is-red' : ''}`} aria-hidden>
+          {pip.rank}
+          <i>{pip.suit}</i>
+        </span>
       )}
       <span className="card__chip" aria-hidden>
-        <i style={{ background: tab.bg }} />
+        {pip ? (
+          <b className={`card__chip-pip${pip.suit === '♥' || pip.suit === '♦' ? ' is-red' : ''}`}>
+            {pip.rank}
+            {pip.suit}
+          </b>
+        ) : (
+          <i style={{ background: tab.bg }} />
+        )}
         {tab.title}
         <em>{num}</em>
       </span>
