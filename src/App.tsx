@@ -81,6 +81,8 @@ export default function App() {
   // cards view: the tab being dealt onto the table (-1 when none)
   const [dealing, setDealing] = useState(-1)
   const [hand, setHand] = useState(dealHand) // playing cards shown on the tabs in the cards view
+  // cards view on touch screens: the first tap picks a card (it stays lifted), the second deals it
+  const [picked, setPicked] = useState(-1)
   const skipReveal = useRef(false) // a dealt card opens in place: don't replay the content reveal
   const flightFrom = useRef<React.CSSProperties[] | null>(null)
   const fadingRef = useRef<Element[]>([]) // back-of-stack content faded out during a flight
@@ -94,7 +96,8 @@ export default function App() {
   // TABS is in reading order; the first tab sits at the front of the stack.
   const stackPos = (i: number) => n - 1 - visible.indexOf(i)
   const openV = openIdx === -1 ? -1 : stackPos(openIdx)
-  const hoverV = openIdx === -1 && hoverIdx !== -1 && !gone.includes(hoverIdx) ? stackPos(hoverIdx) : -1
+  const lifted = view === 'cards' && picked !== -1 ? picked : hoverIdx // a picked card stays up
+  const hoverV = openIdx === -1 && lifted !== -1 && !gone.includes(lifted) ? stackPos(lifted) : -1
   const plainTabs = visible.filter((i) => !isProject(TABS[i]))
   const projectTabs = visible.filter((i) => isProject(TABS[i]))
   const slotOf = (i: number) => {
@@ -110,6 +113,17 @@ export default function App() {
     }
     return { v: isGone ? n : stackPos(i), n, openV, hoverV, self: openIdx === i, gone: isGone, grid }
   }
+
+  // A tap on the table (anywhere but a card) puts a picked card back; so does leaving the view.
+  useEffect(() => {
+    if (picked === -1) return
+    if (view !== 'cards' || openIdx !== -1) return setPicked(-1)
+    const onDown = (e: PointerEvent) => {
+      if (!(e.target instanceof Element) || !e.target.closest('.card')) setPicked(-1)
+    }
+    window.addEventListener('pointerdown', onDown)
+    return () => window.removeEventListener('pointerdown', onDown)
+  }, [picked, view, openIdx])
 
   // The folder's cards stay above the grid until the close animation has finished.
   useEffect(() => {
@@ -561,13 +575,18 @@ export default function App() {
             animate={introDone && !flying && dealing === -1}
             hidden={isGone || (openIdx > -1 && !self)}
             back={view === 'stack' && !flying && openIdx === -1 && !isGone && v !== n - 1}
-            peek={openIdx === -1 && hoverIdx === i}
+            peek={openIdx === -1 && lifted === i}
             onHover={(on) => setHoverIdx((h) => (on ? i : h === i ? -1 : h))}
-            onOpen={() => {
+            onOpen={(touch) => {
               if (openIdx !== -1) return
+              // phones, cards view: first tap lifts the card, a second tap on it deals it
+              if (view === 'cards' && touch && picked !== i) return setPicked(i)
               // in the grid, a project inside the closed folder opens the folder first
               if (view === 'grid' && isProject(tab) && !folderOpen) setFolderOpen(true)
-              else if (view === 'cards') dealCard(i)
+              else if (view === 'cards') {
+                setPicked(-1)
+                dealCard(i)
+              }
               else setOpenIdx(i)
             }}
             onX={(e) => {

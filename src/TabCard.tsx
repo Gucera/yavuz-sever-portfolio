@@ -25,7 +25,8 @@ type Props = {
   /** cards view: the playing card this tab was dealt as, e.g. { rank: 'K', suit: '♠' } */
   pip?: { rank: string; suit: string }
   onHover: (on: boolean) => void
-  onOpen: () => void
+  /** touch is true when opened by a finger tap (the cards view uses tap-to-pick, tap-to-deal) */
+  onOpen: (touch?: boolean) => void
   onX: (e: MouseEvent) => void
   onNext: (e: MouseEvent) => void
 }
@@ -67,7 +68,7 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
       window.removeEventListener('pointercancel', finish)
       touchDown = false
       const tap = ev.type === 'pointerup' && ev.timeStamp - t0 < 450 && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 14
-      if (tap) onOpen()
+      if (tap) onOpen(true)
     }
     window.addEventListener('pointerup', finish)
     window.addEventListener('pointercancel', finish)
