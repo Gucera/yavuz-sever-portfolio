@@ -83,6 +83,7 @@ export default function App() {
   const [hand, setHand] = useState(dealHand) // playing cards shown on the tabs in the cards view
   const skipReveal = useRef(false) // a dealt card opens in place: don't replay the content reveal
   const flightFrom = useRef<React.CSSProperties[] | null>(null)
+  const fadingRef = useRef<Element[]>([]) // back-of-stack content faded out during a flight
 
   const stageRef = useRef<HTMLElement>(null)
   const stackRef = useRef<HTMLDivElement>(null)
@@ -218,6 +219,15 @@ export default function App() {
       })
     }
     const tl = gsap.timeline({ onComplete: land })
+    // Flying back into the stack: the tabs that end up behind the front one only show their
+    // bar there, so fade their content out gradually during the flight — no pop on landing.
+    const fading: Element[] = (fadingRef.current =
+      view === 'stack'
+        ? visible
+            .filter((i) => stackPos(i) !== n - 1)
+            .flatMap((i) => [...(cardRefs.current[i]?.querySelectorAll('.card__page > :not(.card__bar)') ?? [])])
+        : [])
+    if (fading.length) tl.fromTo(fading, { opacity: 1 }, { opacity: 0.002, duration: 0.9, ease: 'power1.inOut' }, 0.3)
     order.forEach((i, k) => {
       const el = cardRefs.current[i]
       const f = from[i]
@@ -387,6 +397,14 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dealing])
+
+  // After landing in the stack, .card--back already hides back content (same opacity), so the
+  // inline fade can go without a visible change — and hover previews work again.
+  useEffect(() => {
+    if (flying || !fadingRef.current.length) return
+    gsap.set(fadingRef.current, { clearProps: 'opacity' })
+    fadingRef.current = []
+  }, [flying])
 
   const close = useCallback(() => setOpenIdx(-1), [])
 
