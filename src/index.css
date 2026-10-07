@@ -3463,3 +3463,8 @@ a {
 .card[data-follow] {
   transition: none !important;
 }
+
+/* every card back looks the same while the deck is shuffled: just the monogram */
+.stage--shuffling .card__back > :not(.card__back-mono) {
+  display: none;
+}
