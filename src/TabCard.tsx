@@ -99,6 +99,12 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
       aria-hidden={hidden || undefined}
       tabIndex={hidden ? -1 : 0}
     >
+      {/* full-size label for the grid view, where the page itself is a small thumbnail */}
+      <span className="card__chip" aria-hidden>
+        <i style={{ background: tab.bg }} />
+        {tab.title}
+        <em>{num}</em>
+      </span>
       <article className="card__page" style={{ background: tab.bg, color: tab.ink }}>
         <div className="card__bar">
           <button
