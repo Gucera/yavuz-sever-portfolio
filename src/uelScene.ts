@@ -114,6 +114,8 @@ export async function mountUelBadge(host: HTMLElement, theme: BadgeTheme): Promi
     lens.position.z = 0.035
   }
 
+  let drawn = false // a still frame has been rendered (see tick)
+
   // ---- sizing ----
   const fit = () => {
     const w = host.clientWidth || 1
@@ -129,7 +131,11 @@ export async function mountUelBadge(host: HTMLElement, theme: BadgeTheme): Promi
     camera.updateProjectionMatrix()
   }
   fit()
-  const ro = new ResizeObserver(fit)
+  // resizing clears the canvas, so let the loop draw a fresh frame even while idle
+  const ro = new ResizeObserver(() => {
+    fit()
+    drawn = false
+  })
   ro.observe(host)
 
   // ---- motion: gentle float + tilt towards the pointer ----
@@ -148,8 +154,15 @@ export async function mountUelBadge(host: HTMLElement, theme: BadgeTheme): Promi
   io.observe(host)
 
   const clock = new THREE.Clock()
+  // Only animate while the Education tab is actually open; otherwise draw one still frame.
+  // (In the stack the card is on screen but covered, and rendering it at 60fps costs a lot
+  // on phones.)
+  const card = host.closest('.card')
   const tick = () => {
     if (!visible || document.documentElement.dataset.flying) return
+    const open = card?.getAttribute('role') === 'dialog'
+    if (!open && drawn) return
+    drawn = true
     const t = clock.getElapsedTime()
     if (!reduced) {
       badge.rotation.y += (target.y + Math.sin(t * 0.5) * 0.12 - badge.rotation.y) * 0.05

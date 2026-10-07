@@ -2617,3 +2617,22 @@ a {
     display: inline;
   }
 }
+
+/* phones: backdrop blur is expensive to composite, so use flat translucent fills instead */
+@media (hover: none), (max-width: 767px) {
+  .folder,
+  .folder-backdrop,
+  .card__chip {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .folder {
+    background: rgba(70, 70, 76, 0.55);
+  }
+  .folder.is-open {
+    background: rgba(46, 46, 52, 0.92);
+  }
+  .folder-backdrop {
+    background: rgba(8, 8, 10, 0.78);
+  }
+}
