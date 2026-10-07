@@ -605,17 +605,115 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hand, view])
 
+  // Cards view: a real shuffle. The cards gather into a deck and turn face down, fly up and
+  // tumble through the air, then the new hand is dealt back out into the fan, each card
+  // turning face up as it lands. Driven by the individual translate/rotate/scale properties so
+  // it never fights the layout transform React writes.
   const shuffle = () => {
     if (shuffling || dealing !== -1) return
-    play('shuffle')
-    setShuffling(true)
     setPicked(-1)
-    window.setTimeout(() => {
+    setHoverIdx(-1)
+    if (reducedMotion()) {
       setOnTable([])
       setFlipped([])
       setHand(dealHand())
-    }, 520)
-    window.setTimeout(() => setShuffling(false), 1000)
+      return
+    }
+    setShuffling(true)
+    const ids = visible.filter((i) => cardRefs.current[i])
+    const els = ids.map((i) => cardRefs.current[i]!)
+    const deck = { x: vp.w / 2, y: vp.h * (vp.mobile ? 0.5 : 0.56) }
+    const centre = (el: HTMLElement) => ({
+      x: (parseFloat(el.style.left) || 0) + (parseFloat(el.style.width) || 0) / 2,
+      y: (parseFloat(el.style.top) || 0) + (parseFloat(el.style.height) || 0) / 2,
+    })
+    const hz = els.map((el) => el.style.getPropertyValue('--hz'))
+    const st = els.map((el) => {
+      const c = centre(el)
+      // g: how far into the deck (0 = in the hand, 1 = on the pile); dx/dy: thrown off the pile
+      return { g: 0, dx: 0, dy: 0, r: 0, sx: 1, s: 1, ox: deck.x - c.x, oy: deck.y - c.y }
+    })
+    const draw = (k: number) => {
+      const el = els[k]
+      const p = st[k]
+      el.style.translate = `${p.ox * p.g + p.dx}px ${p.oy * p.g + p.dy}px`
+      el.style.rotate = `${p.r}deg`
+      el.style.scale = `${p.sx * p.s} ${p.s}`
+    }
+    const rand = (lo: number, hi: number) => lo + Math.random() * (hi - lo)
+    const spreadX = vp.w * (vp.mobile ? 0.3 : 0.34)
+    const rise = vp.h * (vp.mobile ? 0.18 : 0.22)
+    const tl = gsap.timeline({
+      onComplete: () => {
+        els.forEach((el, k) => {
+          el.style.translate = ''
+          el.style.rotate = ''
+          el.style.scale = ''
+          el.style.setProperty('--hz', hz[k])
+        })
+        setShuffling(false)
+      },
+    })
+    // 1. gather: every card slides into one deck in the middle, turning face down on the way
+    els.forEach((_, k) => {
+      tl.to(st[k], { g: 1, r: rand(-6, 6), s: 0.9, duration: 0.5, ease: 'power3.inOut', onUpdate: () => draw(k) }, k * 0.04)
+      tl.to(st[k], { keyframes: { sx: [1, 0.03, 1] }, duration: 0.3, ease: 'none', onUpdate: () => draw(k) }, k * 0.04 + 0.1)
+      tl.call(() => setFlipped((f) => (f.includes(ids[k]) ? f : [...f, ids[k]])), undefined, k * 0.04 + 0.25)
+    })
+    // the deck is together: the cards on the table rejoin the hand, out of sight in the pile
+    tl.call(() => {
+      flushSync(() => setOnTable([]))
+      els.forEach((el, k) => {
+        const c = centre(el)
+        st[k].ox = deck.x - c.x
+        st[k].oy = deck.y - c.y
+        draw(k)
+      })
+      play('shuffle')
+    })
+    // 2. into the air: two waves of cards tossed up, tumbling and crossing over, back onto the deck
+    const air = tl.duration()
+    for (let wave = 0; wave < 2; wave++) {
+      els.forEach((el, k) => {
+        const at = air + wave * 0.55 + ((k * 3 + wave) % els.length) * 0.05
+        const side = (k + wave) % 2 ? 1 : -1
+        tl.call(() => el.style.setProperty('--hz', String(40 + wave * 20 + k)), undefined, at)
+        tl.to(
+          st[k],
+          {
+            keyframes: {
+              dx: [0, side * rand(0.4, 1) * spreadX, 0],
+              dy: [0, -rand(0.55, 1) * rise, 0],
+              r: [0, side * rand(120, 260), side * 360 + rand(-6, 6)],
+              s: [0.9, 1.05, 0.9],
+              easeEach: 'sine.inOut',
+            },
+            duration: 0.7,
+            ease: 'power1.inOut',
+            onUpdate: () => draw(k),
+          },
+          at,
+        )
+      })
+    }
+    // a fresh hand while the deck is face down
+    tl.call(() => {
+      st.forEach((p) => (p.r %= 360))
+      setHand(dealHand())
+    })
+    // 3. deal: one by one, left to right, each card flies to its place in the fan and turns face up
+    const deal = tl.duration() + 0.1
+    els.forEach((el, k) => {
+      const at = deal + k * 0.09
+      tl.call(() => {
+        el.style.setProperty('--hz', hz[k])
+        play('draw')
+      }, undefined, at)
+      tl.to(st[k], { g: 0, r: 0, s: 1, duration: 0.6, ease: 'power2.out', onUpdate: () => draw(k) }, at)
+      tl.to(st[k], { keyframes: { dy: [0, -rise * 0.3, 0], easeEach: 'sine.inOut' }, duration: 0.6, ease: 'none' }, at) // a little arc
+      tl.to(st[k], { keyframes: { sx: [1, 0.03, 1] }, duration: 0.28, ease: 'none', onUpdate: () => draw(k) }, at + 0.3)
+      tl.call(() => setFlipped((f) => f.filter((x) => x !== ids[k])), undefined, at + 0.44)
+    })
   }
 
   // Cards view: flip a card to its back (long press, or right-click on desktop).

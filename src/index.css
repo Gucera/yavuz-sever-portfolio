@@ -3410,21 +3410,13 @@ a {
     display: none;
   }
 }
-@keyframes riffle {
-  0% {
-    translate: 0 0;
-  }
-  45%,
-  60% {
-    translate: 0 60vh;
-  }
-  100% {
-    translate: 0 0;
-  }
+/* while the deck is shuffled GSAP drives every card; no layout transitions or hover */
+.stage--shuffling .card {
+  transition: none !important;
+  pointer-events: none;
 }
 .stage--shuffling .card[role='button'] {
-  animation: riffle 1s var(--ease) both;
-  animation-delay: calc(var(--hz, 1) * 25ms);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
 }
 .toast {
   position: fixed;
