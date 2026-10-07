@@ -2,6 +2,8 @@ import type { CSSProperties } from 'react'
 
 export type Viewport = { w: number; h: number; mobile: boolean }
 
+export type ViewMode = 'stack' | 'grid'
+
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
 export const sidePad = (vp: Viewport) => (vp.mobile ? 16 : clamp(vp.w * 0.111, 24, 160))
@@ -21,10 +23,12 @@ type Slot = {
 
 // Every transform starts with translateY(var(--iy)) so GSAP can drive the
 // intro through a CSS variable without fighting React's inline transform.
-const IY = 'translateY(var(--iy, 0px))'
+// --fr is the tilt GSAP adds while cards fly between the stack and grid views.
+const IY = 'translateY(var(--iy, 0px)) rotate(var(--fr, 0deg))'
 
-/** Card geometry for the "night stack" layout. */
-export function cardStyle(vp: Viewport, { v, n, openV, hoverV, self, gone }: Slot): CSSProperties {
+/** Card geometry for the "night stack" layout and the side-by-side grid view. */
+export function cardStyle(vp: Viewport, slot: Slot, mode: ViewMode = 'stack'): CSSProperties {
+  const { v, n, openV, hoverV, self, gone } = slot
   if (self) {
     return {
       top: 0,
@@ -40,10 +44,12 @@ export function cardStyle(vp: Viewport, { v, n, openV, hoverV, self, gone }: Slo
     }
   }
 
+  if (mode === 'grid') return gridStyle(vp, slot)
+
   const pad = sidePad(vp)
   // Short screens (landscape phones, small laptops) get a compact header, so the stack starts higher.
   const short = vp.h < 620
-  const top0 = short ? 112 : vp.mobile ? 196 : 190
+  const top0 = short ? 112 : vp.mobile ? 214 : 190
   const lastTop = vp.h - (short ? 170 : vp.mobile ? 200 : 300)
   const step = n > 1 ? clamp((lastTop - top0) / (n - 1), short ? 22 : 40, vp.mobile ? 100 : 96) : 0
   const shrink = vp.mobile ? 0.03 : 0.025
@@ -68,5 +74,40 @@ export function cardStyle(vp: Viewport, { v, n, openV, hoverV, self, gone }: Slo
     if (v < openV) return { ...s, transform: `${IY} scale(.92) translateY(-20px)`, opacity: 0, pointerEvents: 'none' }
     return { ...s, top: vp.h + 100 }
   }
+  return s
+}
+
+/** Top of the card area: below the header, compact on short screens. */
+const areaTop = (vp: Viewport) => (vp.h < 620 ? 112 : vp.mobile ? 214 : 190)
+
+/** Grid view: tabs side by side in reading order (About first), sized to fit the screen. */
+function gridStyle(vp: Viewport, { v, n, openV, hoverV, gone }: Slot): CSSProperties {
+  const r = n - 1 - v // reading position
+  const cols = vp.w >= 1100 ? 4 : vp.w >= 700 ? 3 : 2
+  const rows = Math.ceil(n / cols)
+  const gap = vp.mobile ? 10 : 18
+  const pad = vp.mobile ? 16 : clamp(vp.w * 0.03, 16, 48)
+  const top0 = areaTop(vp)
+  const availH = vp.h - top0 - (vp.mobile ? 20 : 36)
+  const cw = (vp.w - pad * 2 - gap * (cols - 1)) / cols
+  const ch = Math.max(90, Math.min((availH - gap * (rows - 1)) / rows, cw * 1.15))
+  const row = Math.floor(r / cols)
+  const col = r % cols
+  // centre an incomplete last row
+  const inRow = row === rows - 1 ? n - row * cols : cols
+  const offset = ((cols - inRow) * (cw + gap)) / 2
+
+  const s: CSSProperties = {
+    zIndex: 10 + r,
+    top: top0 + row * (ch + gap),
+    left: pad + offset + col * (cw + gap),
+    width: cw,
+    height: ch,
+    borderRadius: 14,
+    transform: `${IY} translateY(${v === hoverV ? -8 : 0}px)`,
+    boxShadow: v === hoverV ? '0 26px 50px rgba(0,0,0,.6)' : '0 16px 36px rgba(0,0,0,.5)',
+  }
+  if (gone) return { ...s, transform: `${IY} translateX(${-(vp.w + 60)}px) rotate(-8deg)`, opacity: 0, pointerEvents: 'none' }
+  if (openV > -1) return { ...s, transform: `${IY} scale(.94)`, opacity: 0, pointerEvents: 'none' }
   return s
 }

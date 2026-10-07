@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type React from 'react'
 import gsap from 'gsap'
 import { PROFILE, TABS } from './data'
-import { cardStyle, sidePad, type Viewport } from './layout'
+import { cardStyle, sidePad, type ViewMode, type Viewport } from './layout'
 import { TabCard } from './TabCard'
 
 const MOBILE_BP = 768
@@ -90,6 +91,9 @@ export default function App() {
   const [gone, setGone] = useState<number[]>([])
   const [introDone, setIntroDone] = useState(false)
   const [hoverIdx, setHoverIdx] = useState(-1)
+  const [view, setView] = useState<ViewMode>('stack')
+  const [flying, setFlying] = useState(false)
+  const flightFrom = useRef<React.CSSProperties[] | null>(null)
 
   const stageRef = useRef<HTMLElement>(null)
   const stackRef = useRef<HTMLDivElement>(null)
@@ -101,6 +105,23 @@ export default function App() {
   const stackPos = (i: number) => n - 1 - visible.indexOf(i)
   const openV = openIdx === -1 ? -1 : stackPos(openIdx)
   const hoverV = openIdx === -1 && hoverIdx !== -1 && !gone.includes(hoverIdx) ? stackPos(hoverIdx) : -1
+  const slotOf = (i: number) => {
+    const isGone = gone.includes(i)
+    return { v: isGone ? n : stackPos(i), n, openV, hoverV, self: openIdx === i, gone: isGone }
+  }
+
+  // Switch between the stack and the grid: remember where every card is now, then let the
+  // layout effect below fly each one along an arc to its new place.
+  const toggleView = () => {
+    if (openIdx !== -1 || flying) return
+    const next: ViewMode = view === 'stack' ? 'grid' : 'stack'
+    if (!reducedMotion()) {
+      flightFrom.current = TABS.map((_, i) => cardStyle(vp, { ...slotOf(i), hoverV: -1 }, view))
+      setFlying(true)
+    }
+    setHoverIdx(-1)
+    setView(next)
+  }
 
   // Intro: header letters rise, then the tabs slide up into the stack.
   useLayoutEffect(() => {
@@ -170,6 +191,48 @@ export default function App() {
     })
   }, [openIdx])
 
+  useLayoutEffect(() => {
+    const from = flightFrom.current
+    if (!from) return
+    flightFrom.current = null
+    const px = (v: unknown) => Number(v) || 0
+    // back of the stack lifts off first; each card swings up and to the right, tilting as it flies
+    const order = visible.slice().reverse()
+    const tl = gsap.timeline({ onComplete: () => setFlying(false) })
+    order.forEach((i, k) => {
+      const el = cardRefs.current[i]
+      const f = from[i]
+      const t = cardStyle(vp, { ...slotOf(i), hoverV: -1 }, view)
+      if (!el) return
+      const [ft, fl, fw, fh] = [px(f.top), px(f.left), px(f.width), px(f.height)]
+      const [tt, tlft, tw, th] = [px(t.top), px(t.left), px(t.width), px(t.height)]
+      const lift = 90 + k * 22
+      const swing = (vp.mobile ? 60 : 160) * (view === 'grid' ? 1 : -1)
+      const tilt = (k % 2 ? 1 : -1) * (5 + k * 1.5)
+      gsap.set(el, { top: ft, left: fl, width: fw, height: fh, '--fr': '0deg' })
+      tl.to(
+        el,
+        {
+          keyframes: {
+            top: [ft, Math.min(ft, tt) - lift, tt],
+            left: [fl, (fl + tlft) / 2 + swing, tlft],
+            width: [fw, (fw + tw) / 2, tw],
+            height: [fh, (fh + th) / 2, th],
+            '--fr': ['0deg', `${tilt}deg`, '0deg'],
+            easeEach: 'sine.inOut',
+          },
+          duration: 1.15,
+          ease: 'power2.inOut',
+        },
+        k * 0.07,
+      )
+    })
+    return () => {
+      tl.kill()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view])
+
   const close = useCallback(() => setOpenIdx(-1), [])
 
   // Escape closes; ←/→ step through the tabs (→ from the stack opens the first one).
@@ -217,7 +280,7 @@ export default function App() {
   const pad = sidePad(vp)
 
   return (
-    <main className="stage" ref={stageRef}>
+    <main className={`stage stage--${view}`} ref={stageRef}>
       <div className="header" style={{ left: pad, right: pad }} aria-hidden={openIdx > -1 || undefined}>
         <div className="header__id">
           <h1 className="header__name" aria-label={PROFILE.name}>
@@ -242,6 +305,10 @@ export default function App() {
             ))}
           </nav>
           <div className="header__row">
+            <button className="view-toggle" onClick={toggleView} aria-pressed={view === 'grid'}>
+              <span aria-hidden>{view === 'stack' ? '▦' : '▤'}</span>
+              {view === 'stack' ? 'Grid' : 'Stack'}
+            </button>
             <span>{n} tabs open</span>
             <a href={PROFILE.cv} download>
               CV ↓
@@ -264,11 +331,11 @@ export default function App() {
             }}
             tab={tab}
             num={String(i + 1).padStart(2, '0')}
-            style={cardStyle(vp, { v, n, openV, hoverV, self, gone: isGone })}
+            style={cardStyle(vp, { v, n, openV, hoverV, self, gone: isGone }, view)}
             isOpen={self}
-            animate={introDone}
+            animate={introDone && !flying}
             hidden={isGone || (openIdx > -1 && !self)}
-            back={openIdx === -1 && !isGone && v !== n - 1}
+            back={view === 'stack' && openIdx === -1 && !isGone && v !== n - 1}
             peek={openIdx === -1 && hoverIdx === i}
             onHover={(on) => setHoverIdx((h) => (on ? i : h === i ? -1 : h))}
             onOpen={() => {
