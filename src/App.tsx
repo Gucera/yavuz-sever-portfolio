@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type React from 'react'
 import gsap from 'gsap'
+import { Analytics } from '@vercel/analytics/react'
 import { PROFILE, TABS, isProject } from './data'
 import { cardStyle, gridGeometry, sidePad, type ViewMode, type Viewport } from './layout'
 import { TabCard } from './TabCard'
@@ -29,16 +30,24 @@ export const tabSlug = (title: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
 
-const tabFromHash = () => {
-  const slug = decodeURIComponent(location.hash.slice(1))
-  return slug ? TABS.findIndex((t) => tabSlug(t.title) === slug) : -1
+/** Path for a tab: /quick-label, or / for the stack/grid. */
+const tabPath = (idx: number) => (TABS[idx] ? `/${tabSlug(TABS[idx].title)}` : '/')
+
+/**
+ * Which tab the address points at. Tabs live at real paths (/quick-label) so analytics
+ * report them as separate pages; old #quick-label links still work.
+ */
+const tabFromLocation = () => {
+  const find = (slug: string) => (slug ? TABS.findIndex((t) => tabSlug(t.title) === slug) : -1)
+  const fromPath = find(decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g, '')))
+  return fromPath !== -1 ? fromPath : find(decodeURIComponent(location.hash.slice(1)))
 }
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export default function App() {
   const vp = useViewport()
-  const [openIdx, setOpenIdx] = useState(tabFromHash)
+  const [openIdx, setOpenIdx] = useState(tabFromLocation)
   const [gone, setGone] = useState<number[]>([])
   const [introDone, setIntroDone] = useState(false)
   const [hoverIdx, setHoverIdx] = useState(-1)
@@ -258,19 +267,21 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [close, openIdx, visible, folderOpen])
 
-  // Every tab has its own link (#quick-label…): keep the URL, title and history in sync,
-  // so shared links open the right tab and the browser/phone back button closes it.
+  // Every tab has its own address (/quick-label…). The History API changes the URL without
+  // loading a new page, so nothing re-renders or replays — the animations run as before.
+  // Keeps the title and history in sync, so shared links open the right tab and the
+  // browser/phone back button closes it.
   useEffect(() => {
     const tab = TABS[openIdx]
-    const want = tab ? `#${tabSlug(tab.title)}` : ''
+    const want = tabPath(openIdx)
     document.title = tab ? `${tab.title} — ${PROFILE.name}` : `${PROFILE.name} — Portfolio`
-    if (location.hash !== want) history.pushState(null, '', want || location.pathname + location.search)
+    if (location.pathname !== want || location.hash) history.pushState(null, '', want + location.search)
     if (tab && typeof window.gtag === 'function') window.gtag('event', 'open_tab', { tab_name: tab.title })
   }, [openIdx])
 
   useEffect(() => {
     const onPop = () => {
-      const idx = tabFromHash()
+      const idx = tabFromLocation()
       if (idx !== -1) setGone((g) => g.filter((x) => x !== idx))
       setOpenIdx(idx)
     }
@@ -403,6 +414,9 @@ export default function App() {
         )
       })}
       </div>
+
+      {/* each tab address counts as its own page view in Vercel Analytics */}
+      <Analytics route={tabPath(openIdx)} path={tabPath(openIdx)} />
 
       {gone.length > 0 && openIdx === -1 && (
         <button className="restore" onClick={() => setGone([])}>

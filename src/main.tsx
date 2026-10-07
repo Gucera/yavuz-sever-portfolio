@@ -1,6 +1,5 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Analytics } from '@vercel/analytics/react'
 import './index.css'
 import App from './App.tsx'
 import { CookieBanner } from './CookieBanner'
@@ -12,7 +11,6 @@ if (getConsent() === 'granted') initGoogleAnalytics()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
-    <Analytics />
     <CookieBanner />
   </StrictMode>,
 )
