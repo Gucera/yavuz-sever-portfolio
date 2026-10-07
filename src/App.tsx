@@ -66,6 +66,7 @@ export default function App() {
   const [folderRaised, setFolderRaised] = useState(false)
   // cards view: the tab being dealt onto the table (-1 when none)
   const [dealing, setDealing] = useState(-1)
+  const skipReveal = useRef(false) // a dealt card opens in place: don't replay the content reveal
   const flightFrom = useRef<React.CSSProperties[] | null>(null)
 
   const stageRef = useRef<HTMLElement>(null)
@@ -140,6 +141,10 @@ export default function App() {
     const el = cardRefs.current[openIdx]
     if (!el) return
     el.focus({ preventScroll: true })
+    if (skipReveal.current) {
+      skipReveal.current = false
+      return
+    }
     if (reducedMotion()) return
     const ctx = gsap.context(() => {
       gsap.from('[data-reveal]', { y: 36, opacity: 0, duration: 0.7, ease: 'power3.out', stagger: 0.06, delay: 0.3 })
@@ -282,8 +287,6 @@ export default function App() {
     }
     const num = (v: string) => parseFloat(v) || 0
     const from = { top: num(el.style.top), left: num(el.style.left), width: num(el.style.width), height: num(el.style.height) }
-    const pw = num(getComputedStyle(el).getPropertyValue('--pw')) || vp.w
-    const ps = num(getComputedStyle(el).getPropertyValue('--ps')) || 1
     const pt = num(getComputedStyle(el).getPropertyValue('--pt'))
     const st = { fa: num(el.style.getPropertyValue('--fa')), lift: 0, rx: 0, s: 1 }
     const apply = () => {
@@ -297,28 +300,31 @@ export default function App() {
 
     el.dataset.dealt = '1'
     gsap.set(el, { transformOrigin: '50% 50%', zIndex: 500 })
-    gsap.set(page, { y: pt, scale: ps, transformOrigin: '0 0' })
+    // Lay the page out at its final, full-screen width from the start, so nothing re-flows when
+    // the tab opens at the end; the card just shows it scaled down.
+    gsap.set(page, { width: vp.w, minHeight: vp.h, y: pt, scale: from.width / vp.w, transformOrigin: '0 0' })
     apply()
 
-    const world = stackRef.current
+    const tableEl = stackRef.current?.querySelector<HTMLElement>('.table') ?? null
     const tl = gsap.timeline({
       onComplete: () => {
-        // Hand over to the real open tab and reset the camera in the same frame, so there is
-        // no flash between the zoomed-in table and the full-screen page.
+        // Hand over to the real open tab in the same frame: it has the same size, layout and
+        // position as the card now, so the page simply carries on (no reveal replay).
+        skipReveal.current = true
         flushSync(() => {
           setOpenIdx(i)
           setDealing(-1)
         })
-        if (world) gsap.set(world, { clearProps: 'transform,transformOrigin' })
+        if (tableEl) gsap.set(tableEl, { clearProps: 'transform,transformOrigin' })
         delete el.dataset.dealt
         delete el.dataset.camera
-        gsap.set(page, { clearProps: 'transform' })
+        gsap.set(page, { clearProps: 'transform,width,minHeight' })
         gsap.set(el, { clearProps: 'transformOrigin' })
       },
     })
     // 1. straight from the hand onto the table: a short arc while it tips back and lies down
     tl.to(el, { ...table, duration: 0.8, ease: 'power3.out' })
-    tl.to(page, { scale: table.width / pw, duration: 0.8, ease: 'power3.out' }, '<') // thumbnail follows the card's size
+    tl.to(page, { scale: table.width / vp.w, duration: 0.8, ease: 'power3.out' }, '<') // thumbnail follows the card's size
     tl.to(
       st,
       {
@@ -329,22 +335,36 @@ export default function App() {
       },
       '<',
     )
-    // 2. the card stays on the table and the CAMERA moves: the whole world (table + card) is
-    //    pulled towards the card's centre and scaled up, while the view swings overhead so the
-    //    card squares up and flattens. It ends with the card covering the screen.
+    // 2. the card stays on the table and the CAMERA moves in: the table is zoomed towards the
+    //    card while the view swings overhead (the card squares up and flattens). The card is
+    //    re-laid-out at its on-screen size every frame instead of being scaled as a bitmap, so
+    //    its text stays sharp. The camera settles on the top of the card: the page as it opens.
     const cx = table.left + table.width / 2
     const cy = table.top + table.height / 2
-    const zoom = Math.max(vp.w / table.width, vp.h / table.height)
-    if (world) {
-      gsap.set(world, { transformOrigin: `${cx}px ${cy}px`, rotationX: 0, rotationY: 0 })
-      tl.to(world, { x: vp.w / 2 - cx, y: vp.h / 2 - cy, scale: zoom, duration: 1.1, ease: 'power3.inOut' }, '+=0.12')
+    const Z = vp.w / table.width
+    const cam = { z: 1, dx: 0, dy: 0 }
+    const target = { z: Z, dx: vp.w / 2 - cx, dy: (table.height * Z) / 2 - cy }
+    if (tableEl) {
+      const tr = tableEl.getBoundingClientRect()
+      gsap.set(tableEl, { transformOrigin: `${cx - tr.left}px ${cy - tr.top}px` })
+    }
+    const shoot = () => {
+      if (tableEl) gsap.set(tableEl, { x: cam.dx, y: cam.dy, scale: cam.z })
+      const w = table.width * cam.z
+      const h = table.height * cam.z
+      el.style.width = `${w}px`
+      el.style.height = `${h}px`
+      el.style.left = `${cx + cam.dx - w / 2}px`
+      el.style.top = `${cy + cam.dy - h / 2}px`
+      gsap.set(page, { scale: w / vp.w })
     }
     tl.call(() => {
       el.dataset.camera = '1' // fades the card's cream border and corners as we close in
-    }, undefined, '<')
+    }, undefined, '+=0.12')
+    tl.to(cam, { ...target, duration: 1.1, ease: 'power3.inOut', onUpdate: shoot }, '<')
     tl.to(st, { rx: 0, fa: 0, duration: 1.1, ease: 'power3.inOut', onUpdate: apply }, '<')
     tl.to(el, { borderRadius: 0, duration: 1.1, ease: 'power3.inOut' }, '<')
-    // keep the thumbnail's top edge under the (now hidden) tab bar flush with the card
+    // the thumbnail sat under the card's tab bar; the open page starts at the very top
     tl.to(page, { y: 0, duration: 1.1, ease: 'power3.inOut' }, '<')
     return () => {
       tl.kill()
