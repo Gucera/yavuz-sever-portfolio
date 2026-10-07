@@ -98,7 +98,7 @@ function gridStyle(vp: Viewport, { v, n, openV, hoverV, gone }: Slot): CSSProper
   const offset = ((cols - inRow) * (cw + gap)) / 2
 
   const s: CSSProperties = {
-    zIndex: 10 + r,
+    zIndex: v + 1, // same depth order as the stack, so nothing jumps forward mid-flight
     top: top0 + row * (ch + gap),
     left: pad + offset + col * (cw + gap),
     width: cw,
