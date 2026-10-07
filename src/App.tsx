@@ -3,7 +3,10 @@ import type React from 'react'
 import { flushSync } from 'react-dom'
 import gsap from 'gsap'
 import { Analytics } from '@vercel/analytics/react'
-import { PROFILE, TABS, isProject } from './data'
+import { INCOGNITO, PROFILE, TABS, isProject } from './data'
+import { bestHand } from './poker'
+import { search } from './search'
+import { haptic, isSoundOn, play, setSoundOn } from './sound'
 import { cardStyle, gridGeometry, sidePad, type ViewMode, type Viewport } from './layout'
 import { TabCard } from './TabCard'
 
@@ -64,6 +67,24 @@ const dealHand = () => {
   return TABS.map((t, i) => (t.extra === 'about' ? { rank: 'K', suit: '♠' } : deck[i]))
 }
 
+const readList = (key: string): string[] => {
+  try {
+    const v = JSON.parse(localStorage.getItem(key) ?? '[]')
+    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []
+  } catch {
+    return []
+  }
+}
+const writeList = (key: string, list: string[]) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(list))
+  } catch {
+    // storage blocked: not remembered, nothing else breaks
+  }
+}
+
+const FOLDER_KEY = '__folder'
+
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export default function App() {
@@ -83,6 +104,24 @@ export default function App() {
   const [hand, setHand] = useState(dealHand) // playing cards shown on the tabs in the cards view
   // cards view on touch screens: the first tap picks a card (it stays lifted), the second deals it
   const [picked, setPicked] = useState(-1)
+  // stack: Option/Ctrl+Tab switcher (index into the visible tabs while it's open)
+  const [switcher, setSwitcher] = useState<number | null>(null)
+  // grid: iOS edit mode (jiggle + drag to reorder), saved tile order, tabs already opened
+  const [editMode, setEditMode] = useState(false)
+  const [gridOrder, setGridOrder] = useState(() => readList('grid-order'))
+  const [opened, setOpened] = useState(() => readList('opened-tabs'))
+  // grid: Spotlight search
+  const [spot, setSpot] = useState(false)
+  const [query, setQuery] = useState('')
+  // cards: flipped cards, the one mid-flip, cards left on the table, toast, shuffle, sound
+  const [flipped, setFlipped] = useState<number[]>([])
+  const [flipping, setFlipping] = useState(-1)
+  const [onTable, setOnTable] = useState<number[]>([])
+  const [toast, setToast] = useState<string | null>(null)
+  const [shuffling, setShuffling] = useState(false)
+  const [soundOn, setSoundState] = useState(isSoundOn)
+  const lastDealt = useRef(-1)
+  const lastFlip = useRef(0)
   const skipReveal = useRef(false) // a dealt card opens in place: don't replay the content reveal
   const flightFrom = useRef<React.CSSProperties[] | null>(null)
   const fadingRef = useRef<Element[]>([]) // back-of-stack content faded out during a flight
@@ -100,18 +139,30 @@ export default function App() {
   const hoverV = openIdx === -1 && lifted !== -1 && !gone.includes(lifted) ? stackPos(lifted) : -1
   const plainTabs = visible.filter((i) => !isProject(TABS[i]))
   const projectTabs = visible.filter((i) => isProject(TABS[i]))
+  // grid tiles in their (possibly user-arranged) order: plain tabs plus the projects folder
+  const gridKeys = [...plainTabs.map((i) => TABS[i].title), ...(projectTabs.length ? [FOLDER_KEY] : [])]
+  const rankOf = (k: string) => (gridOrder.includes(k) ? gridOrder.indexOf(k) : 1000 + gridKeys.indexOf(k))
+  const orderedKeys = [...gridKeys].sort((a, b) => rankOf(a) - rankOf(b))
+  const folderAt = Math.max(0, orderedKeys.indexOf(FOLDER_KEY))
+  const orderRef = useRef(orderedKeys)
+  orderRef.current = orderedKeys
+  // cards view: the hand, and the cards left face up on the table
+  const tableTabs = onTable.filter((i) => visible.includes(i))
+  const handTabs = visible.filter((i) => !tableTabs.includes(i))
   const slotOf = (i: number) => {
     const isGone = gone.includes(i)
     const project = isProject(TABS[i])
     const grid = {
-      r: Math.max(0, project ? projectTabs.indexOf(i) : plainTabs.indexOf(i)),
+      r: Math.max(0, project ? projectTabs.indexOf(i) : orderedKeys.indexOf(TABS[i].title)),
       nTabs: plainTabs.length,
       nProjects: projectTabs.length,
       project,
       folderOpen,
       raised: folderRaised,
+      folderAt,
     }
-    return { v: isGone ? n : stackPos(i), n, openV, hoverV, self: openIdx === i, gone: isGone, grid }
+    const cards = { r: Math.max(0, handTabs.indexOf(i)), n: handTabs.length, t: tableTabs.indexOf(i), nt: tableTabs.length }
+    return { v: isGone ? n : stackPos(i), n, openV, hoverV, self: openIdx === i, gone: isGone, grid, cards }
   }
 
   // A tap on the table (anywhere but a card) puts a picked card back; so does leaving the view.
@@ -137,7 +188,13 @@ export default function App() {
   const toggleView = (next: ViewMode) => {
     if (openIdx !== -1 || flying || dealing !== -1 || next === view) return
     if (folderOpen) setFolderOpen(false)
-    if (next === 'cards') setHand(dealHand()) // a fresh, random hand every time
+    setEditMode(false)
+    setOnTable([])
+    setFlipped([])
+    if (next === 'cards') {
+      setHand(dealHand()) // a fresh, random hand every time
+      play('shuffle')
+    }
     if (!reducedMotion()) {
       flightFrom.current = TABS.map((_, i) => cardStyle(vp, { ...slotOf(i), hoverV: -1 }, view))
       setFlying(true)
@@ -310,6 +367,9 @@ export default function App() {
   // above until it fills the screen and the tab opens.
   const dealCard = (i: number) => {
     if (dealing !== -1 || flying) return
+    lastDealt.current = i
+    setFlipped((f) => f.filter((x) => x !== i))
+    play('draw')
     if (reducedMotion()) return setOpenIdx(i)
     setHoverIdx(-1)
     setDealing(i)
@@ -365,6 +425,10 @@ export default function App() {
     // 1. straight from the hand onto the table: a short arc while it tips back and lies down
     tl.to(el, { ...table, duration: 0.8, ease: 'power3.out' })
     tl.to(page, { scale: table.width / vp.w, duration: 0.8, ease: 'power3.out' }, '<') // thumbnail follows the card's size
+    tl.call(() => {
+      play('place')
+      haptic()
+    }, undefined, 0.72)
     tl.to(
       st,
       {
@@ -420,12 +484,172 @@ export default function App() {
     fadingRef.current = []
   }, [flying])
 
+  // Remember which tabs this visitor has opened (the grid shows a "new" dot on the others).
+  useEffect(() => {
+    if (openIdx === -1) return
+    const title = TABS[openIdx].title
+    setOpened((o) => {
+      if (o.includes(title)) return o
+      const next = [...o, title]
+      writeList('opened-tabs', next)
+      return next
+    })
+  }, [openIdx])
+
+  // Cards view: a dealt card that gets closed stays face up on the table.
+  const prevOpen = useRef(openIdx)
+  useEffect(() => {
+    const prev = prevOpen.current
+    prevOpen.current = openIdx
+    if (openIdx !== -1 || prev === -1 || view !== 'cards' || lastDealt.current !== prev) return
+    lastDealt.current = -1
+    setOnTable((t) => (t.includes(prev) ? t : [...t, prev]))
+  }, [openIdx, view])
+
+  // Cards view: a straight or better in the dealt hand is an easter egg.
+  useEffect(() => {
+    if (view !== 'cards') return
+    const best = bestHand(handTabs.map((i) => hand[i]))
+    if (!best) return
+    const t1 = window.setTimeout(() => setToast(`${best}! You found an easter egg.`), 900)
+    const t2 = window.setTimeout(() => setToast(null), 5200)
+    return () => {
+      window.clearTimeout(t1)
+      window.clearTimeout(t2)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hand, view])
+
+  const shuffle = () => {
+    if (shuffling || dealing !== -1) return
+    play('shuffle')
+    setShuffling(true)
+    setPicked(-1)
+    window.setTimeout(() => {
+      setOnTable([])
+      setFlipped([])
+      setHand(dealHand())
+    }, 520)
+    window.setTimeout(() => setShuffling(false), 1000)
+  }
+
+  // Cards view: flip a card to its back (long press, or right-click on desktop).
+  const flipCard = (i: number) => {
+    const now = performance.now()
+    if (view !== 'cards' || dealing !== -1 || now - lastFlip.current < 600) return
+    lastFlip.current = now
+    play('draw')
+    setFlipping(i)
+    window.setTimeout(() => setFlipped((f) => (f.includes(i) ? f.filter((x) => x !== i) : [...f, i])), 170)
+    window.setTimeout(() => setFlipping(-1), 340)
+  }
+
+  // Grid edit mode: drag a tile (or the folder) to reorder; tap outside or Done to finish.
+  useEffect(() => {
+    if (!editMode) return
+    if (view !== 'grid' || openIdx !== -1) return setEditMode(false)
+    const stage = stageRef.current
+    if (!stage) return
+    const onDown = (e: PointerEvent) => {
+      const target = e.target instanceof Element ? e.target.closest<HTMLElement>('.card[role="button"]:not(.card--project), .folder') : null
+      if (!target) {
+        if (!(e.target instanceof Element && e.target.closest('.edit-done, .dock'))) setEditMode(false)
+        return
+      }
+      e.preventDefault()
+      const isFolder = target.classList.contains('folder')
+      const idx = cardRefs.current.indexOf(target as HTMLDivElement)
+      const key = isFolder ? FOLDER_KEY : TABS[idx]?.title
+      if (!key) return
+      const els: HTMLElement[] = isFolder
+        ? [target, ...projectTabs.map((i) => cardRefs.current[i]).filter((x): x is HTMLDivElement => !!x)]
+        : [target]
+      const num = (v: string) => parseFloat(v) || 0
+      const base0 = { x: num(target.style.left), y: num(target.style.top) }
+      const x0 = e.clientX
+      const y0 = e.clientY
+      els.forEach((el) => el.classList.add('is-dragging'))
+      const move = (ev: PointerEvent) => {
+        const dx = ev.clientX - x0
+        const dy = ev.clientY - y0
+        const order = orderRef.current
+        const geo = gridGeometry(vp, plainTabs.length, projectTabs.length, Math.max(0, order.indexOf(FOLDER_KEY)))
+        // which slot is the dragged tile's centre over?
+        const cx = base0.x + dx + num(target.style.width) / 2
+        const cy = base0.y + dy + num(target.style.height) / 2
+        let best = 0
+        let bestD = Infinity
+        order.forEach((_, r) => {
+          const t = geo.tile(r)
+          const d = Math.hypot(t.left + t.width / 2 - cx, t.top + t.height / 2 - cy)
+          if (d < bestD) {
+            bestD = d
+            best = r
+          }
+        })
+        if (order.indexOf(key) !== best) {
+          const next = order.filter((k) => k !== key)
+          next.splice(best, 0, key)
+          setGridOrder(next)
+        }
+        // keep the tile under the finger even after its home slot moved
+        const shiftX = base0.x - num(target.style.left)
+        const shiftY = base0.y - num(target.style.top)
+        els.forEach((el) => (el.style.translate = `${dx + shiftX}px ${dy + shiftY}px`))
+      }
+      const up = () => {
+        window.removeEventListener('pointermove', move)
+        window.removeEventListener('pointerup', up)
+        window.removeEventListener('pointercancel', up)
+        writeList('grid-order', orderRef.current)
+        els.forEach((el) => {
+          el.classList.remove('is-dragging')
+          const [tx, ty] = (el.style.translate || '0px 0px').split(' ').map((v) => parseFloat(v) || 0)
+          const p = { x: tx, y: ty }
+          gsap.to(p, {
+            x: 0,
+            y: 0,
+            duration: 0.35,
+            ease: 'power3.out',
+            onUpdate: () => (el.style.translate = `${p.x}px ${p.y}px`),
+            onComplete: () => (el.style.translate = ''),
+          })
+        })
+      }
+      window.addEventListener('pointermove', move)
+      window.addEventListener('pointerup', up)
+      window.addEventListener('pointercancel', up)
+    }
+    stage.addEventListener('pointerdown', onDown, true)
+    return () => stage.removeEventListener('pointerdown', onDown, true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editMode, view, openIdx, vp])
+
   const close = useCallback(() => setOpenIdx(-1), [])
 
   // Escape closes; ←/→ step through the tabs (→ from the stack opens the first one).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') return openIdx === -1 && folderOpen ? setFolderOpen(false) : close()
+      // Option/Ctrl+Tab: browser-style tab switcher (Tab / Shift+Tab move, releasing the key opens)
+      if (e.key === 'Tab' && (e.altKey || e.ctrlKey) && visible.length) {
+        e.preventDefault()
+        const pos = visible.indexOf(openIdx)
+        const step = e.shiftKey ? -1 : 1
+        setSwitcher((s) => (s === null ? (pos === -1 ? 0 : (pos + step + visible.length) % visible.length) : (s + step + visible.length) % visible.length))
+        return
+      }
+      if (e.key === 'Escape') {
+        if (switcher !== null) return setSwitcher(null)
+        if (spot) return setSpot(false)
+        if (editMode) return setEditMode(false)
+        return openIdx === -1 && folderOpen ? setFolderOpen(false) : close()
+      }
+      const typing = e.target instanceof HTMLElement && !!e.target.closest('input, textarea, select')
+      if (e.key === '/' && !typing && view === 'grid' && openIdx === -1) {
+        e.preventDefault()
+        setQuery('')
+        return setSpot(true)
+      }
       if ((e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') || e.metaKey || e.ctrlKey || e.altKey) return
       if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return
       const pos = visible.indexOf(openIdx)
@@ -436,7 +660,19 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [close, openIdx, visible, folderOpen])
+  }, [close, openIdx, visible, folderOpen, switcher, spot, editMode, view])
+
+  useEffect(() => {
+    if (switcher === null) return
+    const onUp = (e: KeyboardEvent) => {
+      if (e.key !== 'Alt' && e.key !== 'Control') return
+      const i = visible[switcher]
+      setSwitcher(null)
+      if (i !== undefined) setOpenIdx(i)
+    }
+    window.addEventListener('keyup', onUp)
+    return () => window.removeEventListener('keyup', onUp)
+  }, [switcher, visible])
 
   // Every tab has its own address (/quick-label…). The History API changes the URL without
   // loading a new page, so nothing re-renders or replays — the animations run as before.
@@ -470,7 +706,7 @@ export default function App() {
 
   return (
     <main
-      className={`stage stage--${view}${flying ? ' stage--flying' : ''}${landing ? ' stage--landing' : ''}${folderOpen ? ' stage--folder-open' : ''}${dealing !== -1 ? ' stage--dealing' : ''}`}
+      className={`stage stage--${view}${flying ? ' stage--flying' : ''}${landing ? ' stage--landing' : ''}${folderOpen ? ' stage--folder-open' : ''}${dealing !== -1 ? ' stage--dealing' : ''}${editMode ? ' stage--editing' : ''}${shuffling ? ' stage--shuffling' : ''}`}
       ref={stageRef}
     >
       {/* card table: behind everything, zoomed on its own when a card is dealt */}
@@ -512,6 +748,19 @@ export default function App() {
                 </button>
               ))}
             </div>
+            {view === 'cards' && (
+              <button
+                className="sound-toggle"
+                aria-pressed={soundOn}
+                aria-label={soundOn ? 'Mute card sounds' : 'Turn card sounds on'}
+                onClick={() => {
+                  setSoundOn(!soundOn)
+                  setSoundState(!soundOn)
+                }}
+              >
+                {soundOn ? '🔈' : '🔇'}
+              </button>
+            )}
             <span className="header__count">{n} tabs open</span>
             <a href={PROFILE.cv} download>
               CV ↓
@@ -523,7 +772,7 @@ export default function App() {
 
       <div className="stack" ref={stackRef}>
       {view === 'grid' && projectTabs.length > 0 && (() => {
-        const geo = gridGeometry(vp, plainTabs.length, projectTabs.length)
+        const geo = gridGeometry(vp, plainTabs.length, projectTabs.length, folderAt)
         const r = folderOpen ? geo.panel : geo.folder
         return (
           <>
@@ -535,7 +784,14 @@ export default function App() {
             <div
               className={`folder${folderOpen ? ' is-open' : ''}${flying ? ' is-flying' : ''}${openIdx !== -1 ? ' is-hidden' : ''}`}
               style={{ top: r.top, left: r.left, width: r.width, height: r.height, zIndex: folderRaised ? 250 : 0 }}
-              onClick={() => !folderOpen && setFolderOpen(true)}
+              onClick={() => !folderOpen && !editMode && setFolderOpen(true)}
+              onPointerDown={(e) => {
+                if (folderOpen || editMode) return
+                const t = window.setTimeout(() => setEditMode(true), 520)
+                const stop = () => window.clearTimeout(t)
+                e.currentTarget.addEventListener('pointerup', stop, { once: true })
+                e.currentTarget.addEventListener('pointerleave', stop, { once: true })
+              }}
               role={folderOpen ? 'dialog' : 'button'}
               aria-label={folderOpen ? 'Projects' : `Open Projects folder (${projectTabs.length})`}
               tabIndex={folderOpen ? -1 : 0}
@@ -547,6 +803,9 @@ export default function App() {
               }}
             >
               <span className="folder__title">Projects</span>
+              <span className="folder__badge" aria-hidden>
+                {projectTabs.length}
+              </span>
               <span className="card__chip folder__chip" aria-hidden>
                 <i />
                 Projects
@@ -571,6 +830,14 @@ export default function App() {
             style={cardStyle(vp, slotOf(i), view)}
             project={isProject(tab)}
             pip={view === 'cards' ? hand[i] : undefined}
+            flingable={view === 'stack' && openIdx === -1 && !flying}
+            onFling={() => setGone((g) => (g.includes(i) ? g : [...g, i]))}
+            onLongPress={
+              view === 'grid' && openIdx === -1 ? () => setEditMode(true) : view === 'cards' && openIdx === -1 ? () => flipCard(i) : undefined
+            }
+            flipped={view === 'cards' && flipped.includes(i)}
+            flipping={flipping === i}
+            isNew={view === 'grid' && !opened.includes(tab.title)}
             isOpen={self}
             animate={introDone && !flying && dealing === -1}
             hidden={isGone || (openIdx > -1 && !self)}
@@ -578,7 +845,7 @@ export default function App() {
             peek={openIdx === -1 && lifted === i}
             onHover={(on) => setHoverIdx((h) => (on ? i : h === i ? -1 : h))}
             onOpen={(touch) => {
-              if (openIdx !== -1) return
+              if (openIdx !== -1 || editMode) return
               // phones, cards view: first tap lifts the card, a second tap on it deals it
               if (view === 'cards' && touch && picked !== i) return setPicked(i)
               // in the grid, a project inside the closed folder opens the folder first
@@ -603,6 +870,117 @@ export default function App() {
         )
       })}
       </div>
+
+      {/* stack: the surprise tab once every tab has been closed */}
+      {view === 'stack' && n === 0 && openIdx === -1 && (
+        <section className="incognito" style={{ left: pad, right: pad }} aria-label="Incognito tab">
+          <div className="incognito__bar">
+            <span>🕶</span>
+            {INCOGNITO.title}
+          </div>
+          <div className="incognito__body">
+            <h2>Incognito</h2>
+            {INCOGNITO.lines.map((l) => (
+              <p key={l}>{l}</p>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Option/Ctrl+Tab switcher */}
+      {switcher !== null && (
+        <div className="switcher" role="listbox" aria-label="Switch tab">
+          {visible.map((i, k) => (
+            <div key={i} className={`switcher__item${k === switcher ? ' is-on' : ''}`} role="option" aria-selected={k === switcher}>
+              <i style={{ background: TABS[i].bg }} />
+              {TABS[i].title}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* grid: edit mode's Done pill, the dock and Spotlight */}
+      {view === 'grid' && editMode && (
+        <button className="edit-done" onClick={() => setEditMode(false)}>
+          Done
+        </button>
+      )}
+      {view === 'grid' && openIdx === -1 && !folderOpen && (
+        <nav className="dock" aria-label="Links">
+          <a className="dock__item dock__item--gh" href={PROFILE.socials[0][1]} target="_blank" rel="noreferrer" aria-label="GitHub">
+            <span>GH</span>
+          </a>
+          <a className="dock__item dock__item--in" href={PROFILE.socials[1][1]} target="_blank" rel="noreferrer" aria-label="LinkedIn">
+            <span>in</span>
+          </a>
+          <a className="dock__item dock__item--ig" href={PROFILE.socials[2][1]} target="_blank" rel="noreferrer" aria-label="Instagram">
+            <span>IG</span>
+          </a>
+          <a className="dock__item dock__item--mail" href={`mailto:${PROFILE.email}`} aria-label="Email">
+            <span>✉</span>
+          </a>
+          <a className="dock__item dock__item--cv" href={PROFILE.cv} download aria-label="Download CV">
+            <span>CV</span>
+          </a>
+          <button
+            className="dock__item dock__item--search"
+            aria-label="Search"
+            onClick={() => {
+              setQuery('')
+              setSpot(true)
+            }}
+          >
+            <span>⌕</span>
+          </button>
+        </nav>
+      )}
+      {spot && (
+        <div className="spot" onClick={() => setSpot(false)}>
+          <div className="spot__panel" onClick={(e) => e.stopPropagation()}>
+            <input
+              autoFocus
+              className="spot__input"
+              placeholder="Search tabs, projects, skills…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const hit = search(query)[0]
+                  if (hit) {
+                    setSpot(false)
+                    setOpenIdx(hit.i)
+                  }
+                }
+              }}
+            />
+            <ul className="spot__results">
+              {search(query).map((h) => (
+                <li key={h.i}>
+                  <button
+                    onClick={() => {
+                      setSpot(false)
+                      setOpenIdx(h.i)
+                    }}
+                  >
+                    <i style={{ background: TABS[h.i].bg }} />
+                    <strong>{h.title}</strong>
+                    <span>{h.snippet}</span>
+                  </button>
+                </li>
+              ))}
+              {query.trim().length >= 2 && search(query).length === 0 && <li className="spot__empty">No results</li>}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* cards: shuffle and the poker easter egg */}
+      {view === 'cards' && openIdx === -1 && dealing === -1 && (
+        <button className="shuffle" onClick={shuffle}>
+          ♣ Shuffle
+        </button>
+      )}
+      {toast && <div className="toast" role="status">{toast}</div>}
 
       {/* each tab address counts as its own page view in Vercel Analytics */}
       <Analytics route={tabPath(openIdx)} path={tabPath(openIdx)} />

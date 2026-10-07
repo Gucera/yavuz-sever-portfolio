@@ -1,3 +1,4 @@
+import gsap from 'gsap'
 import { forwardRef, useRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
 import type { Tab } from './data'
 import { EducationBody } from './Education'
@@ -24,6 +25,16 @@ type Props = {
   project: boolean
   /** cards view: the playing card this tab was dealt as, e.g. { rank: 'K', suit: '♠' } */
   pip?: { rank: string; suit: string }
+  /** stack view: drag sideways and let go fast to throw the tab away */
+  flingable?: boolean
+  onFling?: () => void
+  /** press and hold ~0.5s (grid: edit mode, cards: flip) */
+  onLongPress?: () => void
+  /** cards view: showing the card back, and mid-flip (squashed) */
+  flipped?: boolean
+  flipping?: boolean
+  /** grid view: never opened by this visitor yet */
+  isNew?: boolean
   onHover: (on: boolean) => void
   /** touch is true when opened by a finger tap (the cards view uses tap-to-pick, tap-to-deal) */
   onOpen: (touch?: boolean) => void
@@ -35,7 +46,7 @@ type Props = {
 let touchDown = false
 
 export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
-  { tab, num, style, isOpen, animate, hidden, back, peek, project, pip, onHover, onOpen, onX, onNext },
+  { tab, num, style, isOpen, animate, hidden, back, peek, project, pip, flingable, onFling, onLongPress, flipped, flipping, isNew, onHover, onOpen, onX, onNext },
   ref,
 ) {
   const onKey = (e: KeyboardEvent) => {
@@ -50,7 +61,83 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
   // (short press, barely moved) rather than by `click`, because the peek shifts the cards
   // under the finger and the browser would otherwise drop the click.
   const lastTouch = useRef(-Infinity)
+  const elRef = useRef<HTMLDivElement | null>(null)
+  const suppressClick = useRef(false) // a drag or long press just ended: ignore the click it makes
+
+  // Long press (all pointers) and the stack's fling-to-close drag.
+  const startGestures = (e: PointerEvent) => {
+    const el = elRef.current
+    if (!el || isOpen || e.button > 0 || (e.target as Element).closest('button')) return
+    const { clientX: x0, clientY: y0, timeStamp: t0, pointerId } = e
+    let dragging = false
+    let last = { x: x0, t: t0 }
+    let vx = 0
+    const hold = onLongPress
+      ? window.setTimeout(() => {
+          suppressClick.current = true
+          onLongPress()
+        }, 520)
+      : 0
+    const move = (ev: globalThis.PointerEvent) => {
+      if (ev.pointerId !== pointerId) return
+      const dx = ev.clientX - x0
+      const dy = ev.clientY - y0
+      if (Math.hypot(dx, dy) > 8) window.clearTimeout(hold)
+      if (!flingable) return
+      if (!dragging && Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.2) dragging = true
+      if (!dragging) return
+      const dt = Math.max(1, ev.timeStamp - last.t)
+      vx = (ev.clientX - last.x) / dt
+      last = { x: ev.clientX, t: ev.timeStamp }
+      el.style.translate = `${dx}px 0`
+      el.style.rotate = `${dx / 24}deg`
+    }
+    const up = (ev: globalThis.PointerEvent) => {
+      if (ev.pointerId !== pointerId) return
+      window.clearTimeout(hold)
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+      if (!dragging) return
+      suppressClick.current = true
+      const dx = ev.clientX - x0
+      const p = { x: dx, r: dx / 24 }
+      const set = () => {
+        el.style.translate = `${p.x}px 0`
+        el.style.rotate = `${p.r}deg`
+      }
+      if (Math.abs(dx) > 140 || Math.abs(vx) > 0.6) {
+        // thrown: keep going off-screen, spinning, then close the tab
+        const dir = Math.sign(dx || vx)
+        gsap.to(p, {
+          x: dir * window.innerWidth * 1.1,
+          r: dir * 40,
+          duration: 0.45,
+          ease: 'power2.in',
+          onUpdate: set,
+          onComplete: () => {
+            onFling?.()
+            window.setTimeout(() => {
+              el.style.translate = ''
+              el.style.rotate = ''
+            }, 80)
+          },
+        })
+      } else {
+        gsap.to(p, { x: 0, r: 0, duration: 0.45, ease: 'back.out(2)', onUpdate: set, onComplete: () => {
+          el.style.translate = ''
+          el.style.rotate = ''
+        } })
+      }
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+  }
+
   const onPointerDown = (e: PointerEvent) => {
+    suppressClick.current = false
+    startGestures(e)
     if (e.pointerType === 'mouse' || isOpen) return
     // a finger on the × (or any button) must not start the peek: the peek shifts the cards,
     // the button slides out from under the finger and the tap is lost
@@ -68,12 +155,16 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
       window.removeEventListener('pointercancel', finish)
       touchDown = false
       const tap = ev.type === 'pointerup' && ev.timeStamp - t0 < 450 && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 14
-      if (tap) onOpen(true)
+      if (tap && !suppressClick.current) onOpen(true)
     }
     window.addEventListener('pointerup', finish)
     window.addEventListener('pointercancel', finish)
   }
   const onTap = (e: MouseEvent) => {
+    if (suppressClick.current) {
+      suppressClick.current = false
+      return
+    }
     if (e.timeStamp - lastTouch.current < 1000) return // touch: already handled on finger-up
     onOpen()
   }
@@ -96,8 +187,12 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
 
   return (
     <div
-      ref={ref}
-      className={`card${animate ? ' card--anim' : ''}${back ? ' card--back' : ''}${peek ? ' card--peek' : ''}${project ? ' card--project' : ''}`}
+      ref={(node) => {
+        elRef.current = node
+        if (typeof ref === 'function') ref(node)
+        else if (ref) ref.current = node
+      }}
+      className={`card${animate ? ' card--anim' : ''}${back ? ' card--back' : ''}${peek ? ' card--peek' : ''}${project ? ' card--project' : ''}${flipped ? ' card--flipped' : ''}${flipping ? ' card--flipping' : ''}`}
       style={style}
       onClick={isOpen ? undefined : onTap}
       onPointerDown={onPointerDown}
@@ -108,7 +203,13 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
       }}
       onPointerLeave={() => onHover(false)}
       onPointerCancel={() => onHover(false)}
-      onContextMenu={(e) => !isOpen && e.preventDefault()}
+      onContextMenu={(e) => {
+        if (isOpen) return
+        e.preventDefault()
+        // right-click works like a long press on desktop (flips a card in the cards view)
+        if (e.nativeEvent instanceof globalThis.PointerEvent && e.nativeEvent.pointerType !== 'mouse') return
+        onLongPress?.()
+      }}
       onKeyDown={onKey}
       role={isOpen ? 'dialog' : 'button'}
       aria-modal={isOpen || undefined}
@@ -134,8 +235,20 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
           <i style={{ background: tab.bg }} />
         )}
         {tab.title}
+        {isNew && <span className="card__new" aria-label="new" />}
         <em>{num}</em>
       </span>
+      {pip && (
+        <div className="card__back" aria-hidden={!flipped}>
+          <span className="card__back-mono">YSS</span>
+          <strong>{tab.title}</strong>
+          <span className="card__back-kind">
+            {tab.kind} · {tab.year}
+          </span>
+          <p>{tab.description.split(/(?<=\.)\s/)[0].slice(0, 150)}</p>
+          <span className="card__back-hint">tap to deal</span>
+        </div>
+      )}
       <article className="card__page" style={{ background: tab.bg, color: tab.ink }}>
         <div className="card__bar">
           <button

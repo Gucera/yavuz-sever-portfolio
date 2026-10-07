@@ -34,6 +34,17 @@ type Slot = {
   gone: boolean
   /** grid view only: where this tab sits (projects live in a folder) */
   grid?: GridSlot
+  /** cards view only: position in the hand, or on the table once dealt and closed */
+  cards?: CardsSlot
+}
+
+export type CardsSlot = {
+  /** index in the hand (-1 when on the table) and hand size */
+  r: number
+  n: number
+  /** index among the cards lying on the table (-1 when in the hand) and their count */
+  t: number
+  nt: number
 }
 
 export type GridSlot = {
@@ -45,6 +56,8 @@ export type GridSlot = {
   folderOpen: boolean
   /** keep the folder's cards above the grid while it opens/closes */
   raised: boolean
+  /** where the folder sits among the grid tiles (edit mode can move it) */
+  folderAt: number
 }
 
 // Every transform starts with translateY(var(--iy)) so GSAP can drive the
@@ -107,6 +120,9 @@ export function cardStyle(vp: Viewport, slot: Slot, mode: ViewMode = 'stack'): C
   return s
 }
 
+/** Height reserved at the bottom of the grid view for the dock. */
+export const dockSpace = (vp: Viewport) => (vp.mobile ? 78 : 96)
+
 /** Top of the card area: below the header, compact on short screens. */
 const areaTop = (vp: Viewport) => (vp.h < 620 ? 112 : vp.mobile ? 214 : 190)
 
@@ -116,14 +132,14 @@ export type Rect = { top: number; left: number; width: number; height: number }
  * Grid view geometry: plain tabs as tiles, the projects collected in an iOS-style folder tile
  * (2×2 mini cards), and the expanded folder panel (2×2 large cards) when it is opened.
  */
-export function gridGeometry(vp: Viewport, nTabs: number, nProjects: number) {
+export function gridGeometry(vp: Viewport, nTabs: number, nProjects: number, folderAt = nTabs) {
   const m = nTabs + (nProjects ? 1 : 0)
   const cols = vp.w >= 700 ? Math.min(4, m) : 2
   const rows = Math.ceil(m / cols)
   const gap = vp.mobile ? 12 : 22
   const pad = vp.mobile ? 16 : clamp(vp.w * 0.03, 16, 48)
   const top0 = areaTop(vp)
-  const availH = vp.h - top0 - (vp.mobile ? 20 : 36)
+  const availH = vp.h - top0 - (vp.mobile ? 20 : 36) - dockSpace(vp) // keep the dock clear
   const cw = (vp.w - pad * 2 - gap * (cols - 1)) / cols
   const ch = Math.max(90, Math.min((availH - gap * (rows - 1)) / rows, cw * 1.15))
   // centre the grid vertically in the space under the header
@@ -136,7 +152,7 @@ export function gridGeometry(vp: Viewport, nTabs: number, nProjects: number) {
     const offset = ((cols - inRow) * (cw + gap)) / 2
     return { top: gridTop + row * (ch + gap), left: pad + offset + col * (cw + gap), width: cw, height: ch }
   }
-  const folder = tile(nTabs)
+  const folder = tile(folderAt)
 
   // closed folder: 2×2 mini cards, leaving room for the label at the bottom
   const inset = Math.min(folder.width, folder.height) * 0.08
@@ -177,8 +193,8 @@ export function gridGeometry(vp: Viewport, nTabs: number, nProjects: number) {
 
 /** Grid view: tabs side by side in reading order (About first), projects in a folder. */
 function gridStyle(vp: Viewport, { v, openV, hoverV, gone, grid }: Slot): CSSProperties {
-  const g = grid ?? { r: 0, nTabs: 1, nProjects: 0, project: false, folderOpen: false, raised: false }
-  const geo = gridGeometry(vp, g.nTabs, g.nProjects)
+  const g = grid ?? { r: 0, nTabs: 1, nProjects: 0, project: false, folderOpen: false, raised: false, folderAt: 1 }
+  const geo = gridGeometry(vp, g.nTabs, g.nProjects, g.folderAt)
   const inFolder = g.project && !g.folderOpen
   const rect = g.project ? (g.folderOpen ? geo.big(g.r) : geo.mini(g.r)) : geo.tile(g.r)
   const lift = v === hoverV && !inFolder
@@ -232,9 +248,23 @@ export function handCard(vp: Viewport, r: number, n: number) {
   }
 }
 
-function handStyle(vp: Viewport, { v, n, openV, hoverV, gone }: Slot): CSSProperties {
-  const r = n - 1 - v // reading order, left to right
-  const c = handCard(vp, r, n)
+/** A card left face up on the table after it was dealt and closed (solitaire-like row). */
+function tableCard(vp: Viewport, t: number, nt: number) {
+  const { cw, ch } = handCardSize(vp)
+  const w = cw * 0.62
+  const h = ch * 0.62
+  const gap = vp.mobile ? 10 : 22
+  const span = vp.w - (vp.mobile ? 32 : 160) - w
+  const step = nt > 1 ? Math.min(w + gap, span / (nt - 1)) : 0
+  const left = vp.w / 2 - (step * (nt - 1)) / 2 - w / 2 + t * step
+  const top = vp.h * (vp.mobile ? 0.36 : 0.33) - h / 2
+  return { top, left, width: w, height: h, angle: (((t * 37) % 11) - 5) * 1.2 }
+}
+
+function handStyle(vp: Viewport, { v, n, openV, hoverV, gone, cards }: Slot): CSSProperties {
+  const onTable = cards && cards.t >= 0
+  const r = cards ? cards.r : n - 1 - v // reading order, left to right
+  const c = onTable ? tableCard(vp, cards.t, cards.nt) : handCard(vp, r, cards ? cards.n : n)
   const ps = c.width / pageWidth(vp)
   const lift = v === hoverV ? c.height * (vp.mobile ? 0.14 : 0.18) : 0
   const s: CSSProperties = {
@@ -242,7 +272,7 @@ function handStyle(vp: Viewport, { v, n, openV, hoverV, gone }: Slot): CSSProper
     ['--fa' as string]: `${c.angle}deg`,
     // like a real hand, each card overlaps the one to its left so every corner index shows;
     // applied only once the hand has landed (see index.css), so nothing jumps mid-flight
-    ['--hz' as string]: r + 1,
+    ['--hz' as string]: onTable ? cards!.t + 1 : r + 20,
     zIndex: v + 1,
     top: c.top,
     left: c.left,

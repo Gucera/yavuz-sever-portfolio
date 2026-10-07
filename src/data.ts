@@ -582,3 +582,13 @@ export const ABOUT = {
   closing:
     'I’m currently focused on growing as a Software Developer and working on products where I can contribute across engineering, product thinking and real-world problem solving.',
 }
+
+/** The surprise tab that shows up in the stack once every other tab has been closed. */
+export const INCOGNITO = {
+  title: 'Incognito',
+  lines: [
+    'You closed every tab. Nobody is watching now.',
+    'Off the clock I play guitar badly and video games well, and I still get excited by a well-made tool.',
+    'Bring the tabs back with “undo” below.',
+  ],
+}
