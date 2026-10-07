@@ -149,7 +149,7 @@ export async function mountUelBadge(host: HTMLElement, theme: BadgeTheme): Promi
 
   const clock = new THREE.Clock()
   const tick = () => {
-    if (!visible) return
+    if (!visible || document.documentElement.dataset.flying) return
     const t = clock.getElapsedTime()
     if (!reduced) {
       badge.rotation.y += (target.y + Math.sin(t * 0.5) * 0.12 - badge.rotation.y) * 0.05

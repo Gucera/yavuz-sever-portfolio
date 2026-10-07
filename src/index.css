@@ -123,6 +123,20 @@ a {
 
 /* ---------- cards ---------- */
 
+/* --fr (flight tilt) and --iy (intro offset) only move the card itself; registering them as
+   non-inherited stops every animated frame from restyling the whole tab content. */
+@property --fr {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --iy {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
 /* page scale: registered so it can transition (grid thumbnail <-> full size) */
 @property --ps {
   syntax: '<number>';
@@ -2033,7 +2047,9 @@ a {
 }
 
 .card--back .card__page > :not(.card__bar) {
-  opacity: 0;
+  /* not 0: fully transparent content is never painted, so the first stack -> grid flight
+     had to rasterise every hidden tab mid-air. 0.002 is invisible but keeps it painted. */
+  opacity: 0.002;
 }
 
 .card--back.card--peek .card__page > :not(.card__bar) {
@@ -2347,4 +2363,9 @@ a {
   .header__row > a[href^='mailto'] {
     flex-basis: 100%;
   }
+}
+
+/* while cards fly between views, isolate each card so moving one doesn't re-lay-out the rest */
+.stage--flying .card {
+  contain: layout paint style;
 }

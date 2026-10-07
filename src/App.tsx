@@ -198,7 +198,16 @@ export default function App() {
     const px = (v: unknown) => Number(v) || 0
     // back of the stack lifts off first; each card swings up and to the right, tilting as it flies
     const order = visible.slice().reverse()
-    const tl = gsap.timeline({ onComplete: () => setFlying(false) })
+    const pages: Element[] = []
+    const root = document.documentElement
+    root.dataset.flying = '1' // lets heavy loops (the 3D crest) pause mid-flight
+    const land = () => {
+      // hand the page scale back to CSS (--ps already holds the final value)
+      gsap.set(pages, { clearProps: 'transform,minHeight' })
+      delete root.dataset.flying
+      setFlying(false)
+    }
+    const tl = gsap.timeline({ onComplete: land })
     order.forEach((i, k) => {
       const el = cardRefs.current[i]
       const f = from[i]
@@ -211,7 +220,15 @@ export default function App() {
       const tilt = (k % 2 ? 1 : -1) * (5 + k * 1.5)
       const fs = Number((f as Record<string, unknown>)['--ps'] ?? 1)
       const ts = Number((t as Record<string, unknown>)['--ps'] ?? 1)
-      gsap.set(el, { top: ft, left: fl, width: fw, height: fh, '--fr': '0deg', '--ps': fs })
+      gsap.set(el, { top: ft, left: fl, width: fw, height: fh, '--fr': '0deg' })
+      // Scale the page element itself (not the inherited --ps) and pin its height, so the
+      // tab content is neither restyled nor re-laid-out on every frame.
+      const page = el.querySelector('.card__page')
+      if (page) {
+        pages.push(page)
+        gsap.set(page, { minHeight: Math.max(fh / fs, th / ts), scale: fs, transformOrigin: '0 0' })
+        tl.to(page, { keyframes: { scale: [fs, (fs + ts) / 2, ts], easeEach: 'sine.inOut' }, duration: 1.15, ease: 'power2.inOut' }, k * 0.07)
+      }
       tl.to(
         el,
         {
@@ -221,7 +238,6 @@ export default function App() {
             width: [fw, (fw + tw) / 2, tw],
             height: [fh, (fh + th) / 2, th],
             '--fr': ['0deg', `${tilt}deg`, '0deg'],
-            '--ps': [fs, (fs + ts) / 2, ts],
             easeEach: 'sine.inOut',
           },
           duration: 1.15,
@@ -232,9 +248,20 @@ export default function App() {
     })
     return () => {
       tl.kill()
+      delete root.dataset.flying
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view])
+
+  // Tabs behind the front one keep their content hidden, so the browser never decodes their
+  // images until the first stack -> grid flight reveals them mid-air. Decode them while idle.
+  useEffect(() => {
+    if (!introDone) return
+    const warm = () =>
+      cardRefs.current.forEach((el) => el?.querySelectorAll('img').forEach((img) => img.decode?.().catch(() => {})))
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 300))
+    idle(warm)
+  }, [introDone])
 
   const close = useCallback(() => setOpenIdx(-1), [])
 
@@ -283,7 +310,7 @@ export default function App() {
   const pad = sidePad(vp)
 
   return (
-    <main className={`stage stage--${view}`} ref={stageRef}>
+    <main className={`stage stage--${view}${flying ? ' stage--flying' : ''}`} ref={stageRef}>
       <div className="header" style={{ left: pad, right: pad }} aria-hidden={openIdx > -1 || undefined}>
         <div className="header__id">
           <h1 className="header__name" aria-label={PROFILE.name}>
