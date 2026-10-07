@@ -2561,7 +2561,9 @@ a {
   transform: none;
 }
 
-.stage--grid:not(.stage--folder-open) .card--project .card__page {
+/* projects in the closed folder are just thumbnails, unless one was opened directly
+   (Spotlight or a /project link) */
+.stage--grid:not(.stage--folder-open) .card--project:not([role='dialog']) .card__page {
   pointer-events: none;
 }
 
@@ -3412,6 +3414,9 @@ a {
 }
 /* while the deck is shuffled GSAP drives every card; no layout transitions or hover. Each card
    gets its own compositor layer so moving it never repaints the page inside. */
+.stage--cards.stage--shuffling:not(.stage--flying):not(.stage--dealing) .card[role='button'][style*='--sz'] {
+  z-index: var(--sz) !important;
+}
 .stage--shuffling .card {
   transition: none !important;
   pointer-events: none;

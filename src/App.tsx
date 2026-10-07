@@ -632,7 +632,6 @@ export default function App() {
       y: (parseFloat(el.style.top) || 0) + (parseFloat(el.style.height) || 0) / 2,
     })
     const cw = (parseFloat(els[0]?.style.width ?? '') || 200) * S
-    const hz = els.map((el) => el.style.getPropertyValue('--hz'))
     const thick = vp.mobile ? 1.2 : 1.6 // px between cards in the pile, so it reads as a deck
     const st = els.map((el, k) => {
       const c = centre(el)
@@ -648,16 +647,17 @@ export default function App() {
       el.style.rotate = `${p.r - p.fa * p.g}deg`
       el.style.scale = `${p.sx * p.s} ${p.s}`
     }
-    const z = (k: number, v: number) => els[k].style.setProperty('--hz', String(v))
+    // stacking during the shuffle goes through its own --sz, so React's --hz is never overwritten
+    const z = (k: number, v: number) => els[k].style.setProperty('--sz', String(v))
     const tl = gsap.timeline({
       defaults: { overwrite: false },
       onComplete: () => {
-        els.forEach((el, k) => {
+        els.forEach((el) => {
           delete el.dataset.facedown
           el.style.translate = ''
           el.style.rotate = ''
           el.style.scale = ''
-          el.style.setProperty('--hz', hz[k])
+          el.style.removeProperty('--sz')
         })
         setShuffling(false)
       },
@@ -733,7 +733,7 @@ export default function App() {
     els.forEach((_, k) => {
       const at = spread + k * 0.06
       tl.call(() => {
-        z(k, 90 + (parseFloat(hz[k]) || 0)) // already in the hand's final overlap order
+        z(k, 90 + n - k) // already in the hand's overlap order: About me on top
         play('draw')
       }, undefined, at)
       tl.to(st[k], { g: 0, s: 1, duration: 0.6, ease: 'power3.out', onUpdate: () => draw(k) }, at)
