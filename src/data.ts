@@ -592,7 +592,7 @@ export const INCOGNITO = {
     ['🥁', 'Behind the kit', 'I play the drums. It’s how I switch off from a screen, and it keeps my timing honest.'],
     ['🎮', 'Player two', 'I game a lot. Good games teach you their rules without a manual, and I try to build software that feels the same way.'],
     ['🛠', 'Side quests', 'I try new tools, design ideas and technology for fun, especially anything that changes how people use software.'],
-    ['📍', 'Home base', 'London, where I’m finishing a Computer Science degree at the University of East London.'],
+    ['📍', 'Home base', 'London. I graduated from the University of East London with a First Class BSc (Hons) in Computer Science.'],
   ] as [string, string, string][],
   hint: 'Want the tabs back? Press “undo” at the bottom of the screen, or reload the page.',
 }

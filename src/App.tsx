@@ -728,16 +728,15 @@ export default function App() {
 
     // 5. spread: the hand fans back out from the deck, left to right, each card turning face up
     const spread = tl.duration()
-    els.forEach((el, k) => {
+    els.forEach((_, k) => {
       const at = spread + k * 0.06
       tl.call(() => {
-        z(k, 90 + n - k)
+        z(k, 90 + (parseFloat(hz[k]) || 0)) // already in the hand's final overlap order
         play('draw')
       }, undefined, at)
       tl.to(st[k], { g: 0, s: 1, duration: 0.6, ease: 'power3.out', onUpdate: () => draw(k) }, at)
       tl.to(st[k], { keyframes: { sx: [1, 0.02, 1] }, duration: 0.26, ease: 'none', onUpdate: () => draw(k) }, at + 0.08)
       tl.call(() => setFlipped((f) => f.filter((x) => x !== ids[k])), undefined, at + 0.21)
-      tl.call(() => el.style.setProperty('--hz', hz[k]), undefined, at + 0.6)
     })
   }
 
