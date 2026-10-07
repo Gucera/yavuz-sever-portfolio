@@ -338,7 +338,7 @@ export default function App() {
             isOpen={self}
             animate={introDone && !flying}
             hidden={isGone || (openIdx > -1 && !self)}
-            back={view === 'stack' && openIdx === -1 && !isGone && v !== n - 1}
+            back={view === 'stack' && !flying && openIdx === -1 && !isGone && v !== n - 1}
             peek={openIdx === -1 && hoverIdx === i}
             onHover={(on) => setHoverIdx((h) => (on ? i : h === i ? -1 : h))}
             onOpen={() => {
