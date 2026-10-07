@@ -137,6 +137,13 @@ a {
   initial-value: 0px;
 }
 
+/* fan angle of a card in the hand (cards view) — registered so it transitions */
+@property --fa {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
 @property --pt {
   syntax: '<length>';
   inherits: true;
@@ -168,7 +175,8 @@ a {
     opacity 0.5s var(--ease),
     box-shadow 0.5s var(--ease),
     --ps 0.7s var(--ease-out),
-    --pt 0.7s var(--ease-out);
+    --pt 0.7s var(--ease-out),
+    --fa 0.7s var(--ease-out);
 }
 
 .stack {
@@ -2634,5 +2642,98 @@ a {
   }
   .folder-backdrop {
     background: rgba(8, 8, 10, 0.78);
+  }
+}
+
+/* ---------- view switch (stack / grid / cards) ---------- */
+
+.view-switch {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  border-radius: 16px;
+  border: 1px solid rgba(198, 255, 61, 0.45);
+}
+
+.view-switch__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 11px;
+  border: none;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.view-switch__btn span {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.view-switch__btn:hover {
+  background: rgba(198, 255, 61, 0.14);
+}
+
+.view-switch__btn.is-on {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+@media (max-width: 767px) {
+  .header__count {
+    display: none;
+  }
+  .view-switch__btn {
+    padding: 0 9px;
+  }
+}
+
+/* ---------- cards view: a hand of playing cards over a card table ---------- */
+
+.stage--cards {
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 108%, rgba(36, 92, 62, 0.55), transparent 70%),
+    var(--bg);
+}
+
+/* cream playing-card border drawn over the face */
+.stage--cards .card[role='button'] {
+  outline: 4px solid #f3efe4;
+  outline-offset: -4px;
+}
+
+.stage--cards:not(.stage--flying):not(.stage--dealing) .card[role='button'] .card__chip {
+  opacity: 1;
+  transform: none;
+}
+
+/* while a card is dealt, the rest of the hand drops away */
+.stage--dealing .card:not([data-dealt]) {
+  opacity: 0 !important;
+  translate: 0 140px;
+  /* the rest of the hand follows after the chosen card has left, not before */
+  transition:
+    opacity 0.55s var(--ease) 0.18s,
+    translate 0.7s var(--ease) 0.12s;
+}
+
+.stage--dealing .card[data-dealt] {
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6) !important;
+}
+
+.stage--dealing .header {
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+}
+
+@media (max-width: 767px) {
+  .stage--cards .card[role='button'] {
+    outline-width: 3px;
+    outline-offset: -3px;
   }
 }

@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 
 export type Viewport = { w: number; h: number; mobile: boolean }
 
-export type ViewMode = 'stack' | 'grid'
+export type ViewMode = 'stack' | 'grid' | 'cards'
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
@@ -50,7 +50,8 @@ export type GridSlot = {
 // Every transform starts with translateY(var(--iy)) so GSAP can drive the
 // intro through a CSS variable without fighting React's inline transform.
 // --fr is the tilt GSAP adds while cards fly between the stack and grid views.
-const IY = 'translateY(var(--iy, 0px)) rotate(var(--fr, 0deg))'
+// --fa is the card's angle in the fanned hand (cards view); 0 elsewhere.
+const IY = 'translateY(var(--iy, 0px)) rotate(var(--fr, 0deg)) rotate(var(--fa, 0deg))'
 
 /** Card geometry for the "night stack" layout and the side-by-side grid view. */
 export function cardStyle(vp: Viewport, slot: Slot, mode: ViewMode = 'stack'): CSSProperties {
@@ -72,6 +73,7 @@ export function cardStyle(vp: Viewport, slot: Slot, mode: ViewMode = 'stack'): C
   }
 
   if (mode === 'grid') return gridStyle(vp, slot)
+  if (mode === 'cards') return handStyle(vp, slot)
 
   const pad = sidePad(vp)
   // Short screens (landscape phones, small laptops) get a compact header, so the stack starts higher.
@@ -197,5 +199,58 @@ function gridStyle(vp: Viewport, { v, openV, hoverV, gone, grid }: Slot): CSSPro
   }
   if (gone) return { ...s, transform: `${IY} translateX(${-(vp.w + 60)}px) rotate(-8deg)`, opacity: 0, pointerEvents: 'none' }
   if (openV > -1) return { ...s, transform: `${IY} scale(.94)`, opacity: 0, pointerEvents: 'none' }
+  return s
+}
+
+/** Playing-card size for the cards view (portrait, 5:7). */
+const handCardSize = (vp: Viewport) => {
+  const ch = vp.mobile ? clamp(vp.h * 0.36, 190, 280) : clamp(vp.h * 0.5, 260, 440)
+  return { cw: ch / 1.4, ch }
+}
+
+/**
+ * Cards view: the tabs held as a fanned hand of playing cards at the bottom of the screen.
+ * Every card's top-centre sits on a circle around a pivot below the hand and the card is
+ * rotated about that point, so its axis runs through the pivot like a real fan.
+ */
+export function handCard(vp: Viewport, r: number, n: number) {
+  const { cw, ch } = handCardSize(vp)
+  const R = vp.mobile ? vp.w * 1.35 : clamp(vp.w * 0.75, 700, 1150)
+  const reach = vp.w / 2 - cw / 2 - (vp.mobile ? 6 : 40)
+  const spread = n > 1 ? Math.min(vp.mobile ? 34 : 56, (2 * Math.asin(clamp(reach / R, 0, 1)) * 180) / Math.PI) : 0
+  const angle = n > 1 ? -spread / 2 + (r * spread) / (n - 1) : 0
+  const a = (angle * Math.PI) / 180
+  const topCentre = vp.h - ch - (vp.mobile ? 26 : 40) // where the middle card's top sits
+  const px = vp.w / 2
+  const py = topCentre + R
+  return {
+    top: py - R * Math.cos(a),
+    left: px + R * Math.sin(a) - cw / 2,
+    width: cw,
+    height: ch,
+    angle,
+  }
+}
+
+function handStyle(vp: Viewport, { v, n, openV, hoverV, gone }: Slot): CSSProperties {
+  const r = n - 1 - v // reading order, left to right
+  const c = handCard(vp, r, n)
+  const ps = c.width / pageWidth(vp)
+  const lift = v === hoverV ? c.height * (vp.mobile ? 0.14 : 0.18) : 0
+  const s: CSSProperties = {
+    ...pageVars(pageWidth(vp), ps, gridBarHeight(vp) - pageBarHeight(vp) * ps),
+    ['--fa' as string]: `${c.angle}deg`,
+    zIndex: v + 1,
+    top: c.top,
+    left: c.left,
+    width: c.width,
+    height: c.height,
+    borderRadius: vp.mobile ? 10 : 14,
+    // translate after the fan rotation, so a hovered card slides up out of the hand along its own axis
+    transform: `${IY} translateY(${-lift}px) scale(${lift ? 1.04 : 1})`,
+    boxShadow: lift ? '0 30px 60px rgba(0,0,0,.65)' : '0 12px 30px rgba(0,0,0,.55)',
+  } as CSSProperties
+  if (gone) return { ...s, transform: `${IY} translateY(${vp.h}px)`, opacity: 0, pointerEvents: 'none' }
+  if (openV > -1) return { ...s, transform: `${IY} translateY(${c.height * 0.6}px)`, opacity: 0, pointerEvents: 'none' }
   return s
 }

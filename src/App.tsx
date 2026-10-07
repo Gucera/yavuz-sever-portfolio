@@ -43,6 +43,12 @@ const tabFromLocation = () => {
   return fromPath !== -1 ? fromPath : find(decodeURIComponent(location.hash.slice(1)))
 }
 
+const VIEWS: [ViewMode, string, string][] = [
+  ['stack', '▤', 'Stack'],
+  ['grid', '▦', 'Grid'],
+  ['cards', '♠', 'Cards'],
+]
+
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export default function App() {
@@ -57,6 +63,8 @@ export default function App() {
   // grid view: the projects live in an iOS-style folder
   const [folderOpen, setFolderOpen] = useState(false)
   const [folderRaised, setFolderRaised] = useState(false)
+  // cards view: the tab being dealt onto the table (-1 when none)
+  const [dealing, setDealing] = useState(-1)
   const flightFrom = useRef<React.CSSProperties[] | null>(null)
 
   const stageRef = useRef<HTMLElement>(null)
@@ -94,10 +102,9 @@ export default function App() {
 
   // Switch between the stack and the grid: remember where every card is now, then let the
   // layout effect below fly each one along an arc to its new place.
-  const toggleView = () => {
-    if (openIdx !== -1 || flying) return
-    if (folderOpen) return setFolderOpen(false)
-    const next: ViewMode = view === 'stack' ? 'grid' : 'stack'
+  const toggleView = (next: ViewMode) => {
+    if (openIdx !== -1 || flying || dealing !== -1 || next === view) return
+    if (folderOpen) setFolderOpen(false)
     if (!reducedMotion()) {
       flightFrom.current = TABS.map((_, i) => cardStyle(vp, { ...slotOf(i), hoverV: -1 }, view))
       setFlying(true)
@@ -202,7 +209,9 @@ export default function App() {
       const ts = Number((t as Record<string, unknown>)['--ps'] ?? 1)
       const fy = parseFloat(String((f as Record<string, unknown>)['--pt'] ?? 0)) || 0
       const ty = parseFloat(String((t as Record<string, unknown>)['--pt'] ?? 0)) || 0
-      gsap.set(el, { top: ft, left: fl, width: fw, height: fh, '--fr': '0deg' })
+      const fa = parseFloat(String((f as Record<string, unknown>)['--fa'] ?? 0)) || 0
+      const ta = parseFloat(String((t as Record<string, unknown>)['--fa'] ?? 0)) || 0
+      gsap.set(el, { top: ft, left: fl, width: fw, height: fh, '--fr': '0deg', '--fa': `${fa}deg` })
       // Scale the page element itself (not the inherited --ps) and pin its height, so the
       // tab content is neither restyled nor re-laid-out on every frame.
       const page = el.querySelector('.card__page')
@@ -224,6 +233,7 @@ export default function App() {
             width: [fw, (fw + tw) / 2, tw],
             height: [fh, (fh + th) / 2, th],
             '--fr': ['0deg', `${tilt}deg`, '0deg'],
+            '--fa': [`${fa}deg`, `${(fa + ta) / 2}deg`, `${ta}deg`],
             easeEach: 'sine.inOut',
           },
           duration: 1.15,
@@ -248,6 +258,78 @@ export default function App() {
     const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 300))
     idle(warm)
   }, [introDone])
+
+  // Cards view: picking a card deals it onto the table, then the camera drops onto it from
+  // above until it fills the screen and the tab opens.
+  const dealCard = (i: number) => {
+    if (dealing !== -1 || flying) return
+    if (reducedMotion()) return setOpenIdx(i)
+    setHoverIdx(-1)
+    setDealing(i)
+  }
+
+  useLayoutEffect(() => {
+    if (dealing === -1) return
+    const i = dealing
+    const el = cardRefs.current[i]
+    const page = el?.querySelector<HTMLElement>('.card__page')
+    if (!el || !page) {
+      setDealing(-1)
+      setOpenIdx(i)
+      return
+    }
+    const num = (v: string) => parseFloat(v) || 0
+    const from = { top: num(el.style.top), left: num(el.style.left), width: num(el.style.width), height: num(el.style.height) }
+    const pw = num(getComputedStyle(el).getPropertyValue('--pw')) || vp.w
+    const ps = num(getComputedStyle(el).getPropertyValue('--ps')) || 1
+    const pt = num(getComputedStyle(el).getPropertyValue('--pt'))
+    const st = { fa: num(el.style.getPropertyValue('--fa')), lift: 0, rx: 0, s: 1 }
+    const apply = () => {
+      el.style.transform = `perspective(1600px) rotate(${st.fa}deg) translateY(${st.lift}px) rotateX(${st.rx}deg) scale(${st.s})`
+    }
+    // where the card lands on the table: centred and a touch smaller (the table is further away)
+    const tw = from.width * 0.92
+    const th = from.height * 0.92
+    const table = { top: vp.h * (vp.mobile ? 0.5 : 0.52) - th / 2, left: vp.w / 2 - tw / 2, width: tw, height: th }
+    const placed = (i % 2 ? 1 : -1) * 4 // left slightly askew, as if dropped by hand
+
+    el.dataset.dealt = '1'
+    gsap.set(el, { transformOrigin: '50% 50%', zIndex: 500 })
+    gsap.set(page, { y: pt, scale: ps, transformOrigin: '0 0' })
+    apply()
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        setOpenIdx(i)
+        setDealing(-1)
+        requestAnimationFrame(() => {
+          delete el.dataset.dealt
+          gsap.set(page, { clearProps: 'transform' })
+          gsap.set(el, { clearProps: 'transformOrigin' })
+        })
+      },
+    })
+    // 1. straight from the hand onto the table: a short arc while it tips back and lies down
+    tl.to(el, { ...table, duration: 0.8, ease: 'power3.out' })
+    tl.to(
+      st,
+      {
+        keyframes: { lift: [0, -from.height * 0.18, 0], fa: [st.fa, st.fa / 2, placed], rx: [0, 30, 55], easeEach: 'sine.inOut' },
+        duration: 0.8,
+        ease: 'power3.out',
+        onUpdate: apply,
+      },
+      '<',
+    )
+    // 2. the camera comes down from above: the card squares up, flattens and fills the screen
+    tl.to(el, { top: 0, left: 0, width: vp.w, height: vp.h, borderRadius: 0, duration: 0.95, ease: 'power3.inOut' }, '+=0.12')
+    tl.to(st, { rx: 0, fa: 0, duration: 0.95, ease: 'power3.inOut', onUpdate: apply }, '<')
+    tl.to(page, { y: 0, scale: vp.w / pw, duration: 0.95, ease: 'power3.inOut' }, '<')
+    return () => {
+      tl.kill()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dealing])
 
   const close = useCallback(() => setOpenIdx(-1), [])
 
@@ -299,7 +381,7 @@ export default function App() {
 
   return (
     <main
-      className={`stage stage--${view}${flying ? ' stage--flying' : ''}${landing ? ' stage--landing' : ''}${folderOpen ? ' stage--folder-open' : ''}`}
+      className={`stage stage--${view}${flying ? ' stage--flying' : ''}${landing ? ' stage--landing' : ''}${folderOpen ? ' stage--folder-open' : ''}${dealing !== -1 ? ' stage--dealing' : ''}`}
       ref={stageRef}
     >
       <div className="header" style={{ left: pad, right: pad }} aria-hidden={openIdx > -1 || undefined}>
@@ -326,11 +408,20 @@ export default function App() {
             ))}
           </nav>
           <div className="header__row">
-            <button className="view-toggle" onClick={toggleView} aria-pressed={view === 'grid'}>
-              <span aria-hidden>{view === 'stack' ? '▦' : '▤'}</span>
-              {view === 'stack' ? 'Grid' : 'Stack'}
-            </button>
-            <span>{n} tabs open</span>
+            <div className="view-switch" role="group" aria-label="View">
+              {VIEWS.map(([mode, icon, label]) => (
+                <button
+                  key={mode}
+                  className={`view-switch__btn${view === mode ? ' is-on' : ''}`}
+                  aria-pressed={view === mode}
+                  onClick={() => toggleView(mode)}
+                >
+                  <span aria-hidden>{icon}</span>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <span className="header__count">{n} tabs open</span>
             <a href={PROFILE.cv} download>
               CV ↓
             </a>
@@ -389,7 +480,7 @@ export default function App() {
             style={cardStyle(vp, slotOf(i), view)}
             project={isProject(tab)}
             isOpen={self}
-            animate={introDone && !flying}
+            animate={introDone && !flying && dealing === -1}
             hidden={isGone || (openIdx > -1 && !self)}
             back={view === 'stack' && !flying && openIdx === -1 && !isGone && v !== n - 1}
             peek={openIdx === -1 && hoverIdx === i}
@@ -398,6 +489,7 @@ export default function App() {
               if (openIdx !== -1) return
               // in the grid, a project inside the closed folder opens the folder first
               if (view === 'grid' && isProject(tab) && !folderOpen) setFolderOpen(true)
+              else if (view === 'cards') dealCard(i)
               else setOpenIdx(i)
             }}
             onX={(e) => {
