@@ -28,6 +28,9 @@ type Props = {
   onNext: (e: MouseEvent) => void
 }
 
+/** A finger is currently pressed on a tab card (shared so the peek can follow it across cards). */
+let touchDown = false
+
 export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
   { tab, num, style, isOpen, animate, hidden, back, peek, project, onHover, onOpen, onX, onNext },
   ref,
@@ -46,6 +49,10 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
   const lastTouch = useRef(-Infinity)
   const onPointerDown = (e: PointerEvent) => {
     if (e.pointerType === 'mouse' || isOpen) return
+    // a finger on the × (or any button) must not start the peek: the peek shifts the cards,
+    // the button slides out from under the finger and the tap is lost
+    if ((e.target as Element).closest('button')) return
+    touchDown = true
     lastTouch.current = e.timeStamp
     const el = e.target as Element
     if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId)
@@ -56,6 +63,7 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
       if (ev.pointerId !== pointerId) return
       window.removeEventListener('pointerup', finish)
       window.removeEventListener('pointercancel', finish)
+      touchDown = false
       const tap = ev.type === 'pointerup' && ev.timeStamp - t0 < 450 && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 14
       if (tap) onOpen()
     }
@@ -90,7 +98,11 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
       style={style}
       onClick={isOpen ? undefined : onTap}
       onPointerDown={onPointerDown}
-      onPointerEnter={() => onHover(true)}
+      onPointerEnter={(e) => {
+        // touch fires pointerenter as the finger lands (before pointerdown); only follow a finger
+        // that is already pressing and sliding across the stack
+        if (e.pointerType === 'mouse' || touchDown) onHover(true)
+      }}
       onPointerLeave={() => onHover(false)}
       onPointerCancel={() => onHover(false)}
       onContextMenu={(e) => !isOpen && e.preventDefault()}
