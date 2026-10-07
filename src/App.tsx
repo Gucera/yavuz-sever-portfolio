@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type React from 'react'
+import { flushSync } from 'react-dom'
 import gsap from 'gsap'
 import { Analytics } from '@vercel/analytics/react'
 import { PROFILE, TABS, isProject } from './data'
@@ -150,6 +151,7 @@ export default function App() {
   useEffect(() => {
     const stack = stackRef.current
     if (!stack || reducedMotion() || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
+    if (dealing !== -1) return // the deal animation drives the stack (camera) itself
     gsap.set(stack, { transformPerspective: 1800, transformOrigin: '50% 30%' })
     if (openIdx !== -1) {
       gsap.to(stack, { rotationX: 0, rotationY: 0, duration: 0.6, ease: 'power3.out' })
@@ -171,7 +173,7 @@ export default function App() {
       window.removeEventListener('pointermove', onMove)
       document.removeEventListener('pointerleave', onLeave)
     }
-  }, [openIdx])
+  }, [openIdx, dealing])
 
   useLayoutEffect(() => {
     const from = flightFrom.current
@@ -298,19 +300,25 @@ export default function App() {
     gsap.set(page, { y: pt, scale: ps, transformOrigin: '0 0' })
     apply()
 
+    const world = stackRef.current
     const tl = gsap.timeline({
       onComplete: () => {
-        setOpenIdx(i)
-        setDealing(-1)
-        requestAnimationFrame(() => {
-          delete el.dataset.dealt
-          gsap.set(page, { clearProps: 'transform' })
-          gsap.set(el, { clearProps: 'transformOrigin' })
+        // Hand over to the real open tab and reset the camera in the same frame, so there is
+        // no flash between the zoomed-in table and the full-screen page.
+        flushSync(() => {
+          setOpenIdx(i)
+          setDealing(-1)
         })
+        if (world) gsap.set(world, { clearProps: 'transform,transformOrigin' })
+        delete el.dataset.dealt
+        delete el.dataset.camera
+        gsap.set(page, { clearProps: 'transform' })
+        gsap.set(el, { clearProps: 'transformOrigin' })
       },
     })
     // 1. straight from the hand onto the table: a short arc while it tips back and lies down
     tl.to(el, { ...table, duration: 0.8, ease: 'power3.out' })
+    tl.to(page, { scale: table.width / pw, duration: 0.8, ease: 'power3.out' }, '<') // thumbnail follows the card's size
     tl.to(
       st,
       {
@@ -321,10 +329,23 @@ export default function App() {
       },
       '<',
     )
-    // 2. the camera comes down from above: the card squares up, flattens and fills the screen
-    tl.to(el, { top: 0, left: 0, width: vp.w, height: vp.h, borderRadius: 0, duration: 0.95, ease: 'power3.inOut' }, '+=0.12')
-    tl.to(st, { rx: 0, fa: 0, duration: 0.95, ease: 'power3.inOut', onUpdate: apply }, '<')
-    tl.to(page, { y: 0, scale: vp.w / pw, duration: 0.95, ease: 'power3.inOut' }, '<')
+    // 2. the card stays on the table and the CAMERA moves: the whole world (table + card) is
+    //    pulled towards the card's centre and scaled up, while the view swings overhead so the
+    //    card squares up and flattens. It ends with the card covering the screen.
+    const cx = table.left + table.width / 2
+    const cy = table.top + table.height / 2
+    const zoom = Math.max(vp.w / table.width, vp.h / table.height)
+    if (world) {
+      gsap.set(world, { transformOrigin: `${cx}px ${cy}px`, rotationX: 0, rotationY: 0 })
+      tl.to(world, { x: vp.w / 2 - cx, y: vp.h / 2 - cy, scale: zoom, duration: 1.1, ease: 'power3.inOut' }, '+=0.12')
+    }
+    tl.call(() => {
+      el.dataset.camera = '1' // fades the card's cream border and corners as we close in
+    }, undefined, '<')
+    tl.to(st, { rx: 0, fa: 0, duration: 1.1, ease: 'power3.inOut', onUpdate: apply }, '<')
+    tl.to(el, { borderRadius: 0, duration: 1.1, ease: 'power3.inOut' }, '<')
+    // keep the thumbnail's top edge under the (now hidden) tab bar flush with the card
+    tl.to(page, { y: 0, duration: 1.1, ease: 'power3.inOut' }, '<')
     return () => {
       tl.kill()
     }
@@ -431,6 +452,7 @@ export default function App() {
       </div>
 
       <div className="stack" ref={stackRef}>
+      {view === 'cards' && <div className="table" aria-hidden />}
       {view === 'grid' && projectTabs.length > 0 && (() => {
         const geo = gridGeometry(vp, plainTabs.length, projectTabs.length)
         const r = folderOpen ? geo.panel : geo.folder

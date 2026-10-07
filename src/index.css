@@ -2737,3 +2737,27 @@ a {
     outline-offset: -3px;
   }
 }
+
+/* the card table lives inside the stack, so it zooms with the camera when a card is dealt */
+.table {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 55% 45% at 50% 64%, #24563c 0%, #173a28 45%, #0e1f16 70%, var(--bg) 92%);
+  animation: table-in 0.6s var(--ease) both;
+}
+
+@keyframes table-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* as the camera closes in, the playing-card border and corners give way to the page */
+.card[data-camera] {
+  outline-color: transparent !important;
+  transition: outline-color 0.45s var(--ease) !important;
+}
