@@ -209,7 +209,9 @@ export default function App() {
       const lift = 90 + k * 22
       const swing = (vp.mobile ? 60 : 160) * (view === 'grid' ? 1 : -1)
       const tilt = (k % 2 ? 1 : -1) * (5 + k * 1.5)
-      gsap.set(el, { top: ft, left: fl, width: fw, height: fh, '--fr': '0deg' })
+      const fs = Number((f as Record<string, unknown>)['--ps'] ?? 1)
+      const ts = Number((t as Record<string, unknown>)['--ps'] ?? 1)
+      gsap.set(el, { top: ft, left: fl, width: fw, height: fh, '--fr': '0deg', '--ps': fs })
       tl.to(
         el,
         {
@@ -219,6 +221,7 @@ export default function App() {
             width: [fw, (fw + tw) / 2, tw],
             height: [fh, (fh + th) / 2, th],
             '--fr': ['0deg', `${tilt}deg`, '0deg'],
+            '--ps': [fs, (fs + ts) / 2, ts],
             easeEach: 'sine.inOut',
           },
           duration: 1.15,

@@ -8,6 +8,12 @@ const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(mi
 
 export const sidePad = (vp: Viewport) => (vp.mobile ? 16 : clamp(vp.w * 0.111, 24, 160))
 
+/** Width the tab page is laid out at; grid cards show it scaled down like a thumbnail. */
+const pageWidth = (vp: Viewport) => vp.w - sidePad(vp) * 2
+
+/** --pw: page layout width, --ps: page scale (1 everywhere except grid thumbnails). */
+const pageVars = (pw: number, ps: number) => ({ '--pw': `${pw}px`, '--ps': ps }) as CSSProperties
+
 type Slot = {
   /** position among visible (non-closed) tabs */
   v: number
@@ -31,6 +37,7 @@ export function cardStyle(vp: Viewport, slot: Slot, mode: ViewMode = 'stack'): C
   const { v, n, openV, hoverV, self, gone } = slot
   if (self) {
     return {
+      ...pageVars(vp.w, 1),
       top: 0,
       left: 0,
       width: vp.w,
@@ -57,6 +64,7 @@ export function cardStyle(vp: Viewport, slot: Slot, mode: ViewMode = 'stack'): C
   const peek = hoverV === -1 ? 0 : v === hoverV ? -12 : v > hoverV ? (vp.mobile ? 24 : 44) : 0
 
   const s: CSSProperties = {
+    ...pageVars(pageWidth(vp), 1),
     zIndex: v + 1,
     top: top0 + v * step,
     left: pad,
@@ -98,6 +106,7 @@ function gridStyle(vp: Viewport, { v, n, openV, hoverV, gone }: Slot): CSSProper
   const offset = ((cols - inRow) * (cw + gap)) / 2
 
   const s: CSSProperties = {
+    ...pageVars(pageWidth(vp), cw / pageWidth(vp)),
     zIndex: v + 1, // same depth order as the stack, so nothing jumps forward mid-flight
     top: top0 + row * (ch + gap),
     left: pad + offset + col * (cw + gap),
