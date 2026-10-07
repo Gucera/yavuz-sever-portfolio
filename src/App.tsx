@@ -490,10 +490,10 @@ export default function App() {
           easeEach: 'sine.inOut',
         },
         duration: 0.6,
-        ease: 'power3.out',
+        ease: 'power2.out',
         onUpdate: apply,
       },
-      '<',
+      0, // with the move, from the first frame
     )
     // 2. the card stays on the table and the CAMERA moves in: the table is zoomed towards the
     //    card while the view swings overhead (the card squares up and flattens). The card is
