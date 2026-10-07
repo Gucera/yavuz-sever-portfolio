@@ -2369,3 +2369,9 @@ a {
 .stage--flying .card {
   contain: layout paint style;
 }
+
+/* right after landing in the stack, hide back-of-stack content at once (it's covered anyway)
+   instead of fading six tabs on the landing frame */
+.stage--landing .card__page > :not(.card__bar) {
+  transition: none;
+}

@@ -93,6 +93,7 @@ export default function App() {
   const [hoverIdx, setHoverIdx] = useState(-1)
   const [view, setView] = useState<ViewMode>('stack')
   const [flying, setFlying] = useState(false)
+  const [landing, setLanding] = useState(false)
   const flightFrom = useRef<React.CSSProperties[] | null>(null)
 
   const stageRef = useRef<HTMLElement>(null)
@@ -201,11 +202,16 @@ export default function App() {
     const pages: Element[] = []
     const root = document.documentElement
     root.dataset.flying = '1' // lets heavy loops (the 3D crest) pause mid-flight
+    // Landing is spread over two frames so it doesn't land on one: first hand the page
+    // scale back to CSS (--ps already holds the final value), then end the flight.
     const land = () => {
-      // hand the page scale back to CSS (--ps already holds the final value)
       gsap.set(pages, { clearProps: 'transform,minHeight' })
-      delete root.dataset.flying
-      setFlying(false)
+      requestAnimationFrame(() => {
+        delete root.dataset.flying
+        setLanding(true)
+        setFlying(false)
+        window.setTimeout(() => setLanding(false), 450)
+      })
     }
     const tl = gsap.timeline({ onComplete: land })
     order.forEach((i, k) => {
@@ -310,7 +316,7 @@ export default function App() {
   const pad = sidePad(vp)
 
   return (
-    <main className={`stage stage--${view}${flying ? ' stage--flying' : ''}`} ref={stageRef}>
+    <main className={`stage stage--${view}${flying ? ' stage--flying' : ''}${landing ? ' stage--landing' : ''}`} ref={stageRef}>
       <div className="header" style={{ left: pad, right: pad }} aria-hidden={openIdx > -1 || undefined}>
         <div className="header__id">
           <h1 className="header__name" aria-label={PROFILE.name}>
