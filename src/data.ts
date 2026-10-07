@@ -578,7 +578,7 @@ export const ABOUT = {
     ['Continuous improvement', 'I’m always trying to improve both my technical skills and the way I think about product and engineering decisions.'],
   ] as [string, string][],
   beyond:
-    'Outside of software, I enjoy gaming and playing guitar. I also like exploring new tools, design ideas and technologies, especially when they change the way people interact with software.',
+    'Outside of software, I enjoy gaming and playing the drums. I also like exploring new tools, design ideas and technologies, especially when they change the way people interact with software.',
   closing:
     'I’m currently focused on growing as a Software Developer and working on products where I can contribute across engineering, product thinking and real-world problem solving.',
 }
@@ -586,9 +586,13 @@ export const ABOUT = {
 /** The surprise tab that shows up in the stack once every other tab has been closed. */
 export const INCOGNITO = {
   title: 'Incognito',
-  lines: [
-    'You closed every tab. Nobody is watching now.',
-    'Off the clock I play guitar badly and video games well, and I still get excited by a well-made tool.',
-    'Bring the tabs back with “undo” below.',
-  ],
+  heading: 'Off the record',
+  lead: 'You closed every tab, so the CV is out of sight. This private window is the part that doesn’t fit on a CV.',
+  facts: [
+    ['🥁', 'Behind the kit', 'I play the drums. It’s how I switch off from a screen, and it keeps my timing honest.'],
+    ['🎮', 'Player two', 'I game a lot. Good games teach you their rules without a manual, and I try to build software that feels the same way.'],
+    ['🛠', 'Side quests', 'I try new tools, design ideas and technology for fun, especially anything that changes how people use software.'],
+    ['📍', 'Home base', 'London, where I’m finishing a Computer Science degree at the University of East London.'],
+  ] as [string, string, string][],
+  hint: 'Want the tabs back? Press “undo” at the bottom of the screen, or reload the page.',
 }

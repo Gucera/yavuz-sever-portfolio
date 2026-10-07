@@ -112,6 +112,27 @@ export default function App() {
   const [opened, setOpened] = useState(() => readList('opened-tabs'))
   // grid: Spotlight search
   const [spot, setSpot] = useState(false)
+  // macOS-style dock magnification: every icon grows by how close the pointer is to it, so the
+  // neighbours swell too and the row parts smoothly instead of one icon popping up
+  const dockRef = useRef<HTMLElement>(null)
+  const magnify = (e: React.PointerEvent) => {
+    const dock = dockRef.current
+    if (!dock || e.pointerType !== 'mouse') return
+    const items = [...dock.children] as HTMLElement[]
+    const base = 52
+    const gap = parseFloat(getComputedStyle(dock).columnGap) || 0
+    const r = dock.getBoundingClientRect()
+    const left = r.left + r.width / 2 - (items.length * base + (items.length - 1) * gap) / 2
+    items.forEach((it, k) => {
+      const d = Math.abs(e.clientX - (left + k * (base + gap) + base / 2)) / (base * 2.6)
+      const m = d >= 1 ? 0 : Math.cos((d * Math.PI) / 2)
+      gsap.to(it, { '--m': m, duration: 0.2, ease: 'power2.out', overwrite: true })
+    })
+  }
+  const unmagnify = () => {
+    const items = dockRef.current ? [...dockRef.current.children] : []
+    gsap.to(items, { '--m': 0, duration: 0.45, ease: 'power3.out', overwrite: true })
+  }
   const [query, setQuery] = useState('')
   // cards: flipped cards, the one mid-flip, cards left on the table, toast, shuffle, sound
   const [flipped, setFlipped] = useState<number[]>([])
@@ -932,7 +953,7 @@ export default function App() {
             onX={(e) => {
               e.stopPropagation()
               if (self) setOpenIdx(-1)
-              else setGone((g) => [...g, i])
+              else setGone((g) => (g.includes(i) ? g : [...g, i]))
             }}
             onNext={(e) => {
               e.stopPropagation()
@@ -952,10 +973,20 @@ export default function App() {
             {INCOGNITO.title}
           </div>
           <div className="incognito__body">
-            <h2>Incognito</h2>
-            {INCOGNITO.lines.map((l) => (
-              <p key={l}>{l}</p>
-            ))}
+            <h2>{INCOGNITO.heading}</h2>
+            <p className="incognito__lead">{INCOGNITO.lead}</p>
+            <ul className="incognito__facts">
+              {INCOGNITO.facts.map(([icon, title, text]) => (
+                <li key={title}>
+                  <span className="incognito__icon" aria-hidden>
+                    {icon}
+                  </span>
+                  <strong>{title}</strong>
+                  <p>{text}</p>
+                </li>
+              ))}
+            </ul>
+            <p className="incognito__hint">{INCOGNITO.hint}</p>
           </div>
         </section>
       )}
@@ -979,7 +1010,7 @@ export default function App() {
         </button>
       )}
       {view === 'grid' && openIdx === -1 && !folderOpen && (
-        <nav className="dock" aria-label="Links">
+        <nav className="dock" aria-label="Links" ref={dockRef} onPointerMove={magnify} onPointerLeave={unmagnify}>
           <a className="dock__item dock__item--gh" href={PROFILE.socials[0][1]} target="_blank" rel="noreferrer" aria-label="GitHub">
             <span>GH</span>
           </a>
