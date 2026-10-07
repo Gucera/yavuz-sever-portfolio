@@ -11,8 +11,15 @@ export const sidePad = (vp: Viewport) => (vp.mobile ? 16 : clamp(vp.w * 0.111, 2
 /** Width the tab page is laid out at; grid cards show it scaled down like a thumbnail. */
 const pageWidth = (vp: Viewport) => vp.w - sidePad(vp) * 2
 
-/** --pw: page layout width, --ps: page scale (1 everywhere except grid thumbnails). */
-const pageVars = (pw: number, ps: number) => ({ '--pw': `${pw}px`, '--ps': ps }) as CSSProperties
+/**
+ * --pw: page layout width, --ps: page scale (1 everywhere except grid thumbnails),
+ * --pt: page offset, so a grid thumbnail starts just below the card's full-size tab bar.
+ */
+const pageVars = (pw: number, ps: number, pt = 0) => ({ '--pw': `${pw}px`, '--ps': ps, '--pt': `${pt}px` }) as CSSProperties
+
+/** Height of the full-size tab bar on grid cards, and of the page's own bar (see index.css). */
+export const gridBarHeight = (vp: Viewport) => (vp.mobile ? 26 : 34)
+const pageBarHeight = (vp: Viewport) => (vp.mobile ? 38 : 42)
 
 type Slot = {
   /** position among visible (non-closed) tabs */
@@ -174,8 +181,9 @@ function gridStyle(vp: Viewport, { v, openV, hoverV, gone, grid }: Slot): CSSPro
   const rect = g.project ? (g.folderOpen ? geo.big(g.r) : geo.mini(g.r)) : geo.tile(g.r)
   const lift = v === hoverV && !inFolder
 
+  const ps = rect.width / pageWidth(vp)
   const s: CSSProperties = {
-    ...pageVars(pageWidth(vp), rect.width / pageWidth(vp)),
+    ...pageVars(pageWidth(vp), ps, inFolder ? 0 : gridBarHeight(vp) - pageBarHeight(vp) * ps),
     // same depth order as the stack (nothing jumps forward mid-flight); an open folder's
     // cards sit above its panel and the blurred backdrop
     zIndex: g.project && g.raised ? 260 + g.r : v + 1,

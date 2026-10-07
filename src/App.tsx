@@ -248,14 +248,20 @@ export default function App() {
       const tilt = (k % 2 ? 1 : -1) * (5 + k * 1.5)
       const fs = Number((f as Record<string, unknown>)['--ps'] ?? 1)
       const ts = Number((t as Record<string, unknown>)['--ps'] ?? 1)
+      const fy = parseFloat(String((f as Record<string, unknown>)['--pt'] ?? 0)) || 0
+      const ty = parseFloat(String((t as Record<string, unknown>)['--pt'] ?? 0)) || 0
       gsap.set(el, { top: ft, left: fl, width: fw, height: fh, '--fr': '0deg' })
       // Scale the page element itself (not the inherited --ps) and pin its height, so the
       // tab content is neither restyled nor re-laid-out on every frame.
       const page = el.querySelector('.card__page')
       if (page) {
         pages.push(page)
-        gsap.set(page, { minHeight: Math.max(fh / fs, th / ts), scale: fs, transformOrigin: '0 0' })
-        tl.to(page, { keyframes: { scale: [fs, (fs + ts) / 2, ts], easeEach: 'sine.inOut' }, duration: 1.15, ease: 'power2.inOut' }, k * 0.07)
+        gsap.set(page, { minHeight: Math.max(fh / fs, th / ts), y: fy, scale: fs, transformOrigin: '0 0' })
+        tl.to(
+          page,
+          { keyframes: { y: [fy, (fy + ty) / 2, ty], scale: [fs, (fs + ts) / 2, ts], easeEach: 'sine.inOut' }, duration: 1.15, ease: 'power2.inOut' },
+          k * 0.07,
+        )
       }
       tl.to(
         el,
