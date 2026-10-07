@@ -20,6 +20,8 @@ type Props = {
   back: boolean
   /** hovered / touched in the stack — reveals the tab's content */
   peek: boolean
+  /** a project case study (lives in the grid's folder) */
+  project: boolean
   onHover: (on: boolean) => void
   onOpen: () => void
   onX: (e: MouseEvent) => void
@@ -27,7 +29,7 @@ type Props = {
 }
 
 export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
-  { tab, num, style, isOpen, animate, hidden, back, peek, onHover, onOpen, onX, onNext },
+  { tab, num, style, isOpen, animate, hidden, back, peek, project, onHover, onOpen, onX, onNext },
   ref,
 ) {
   const onKey = (e: KeyboardEvent) => {
@@ -84,7 +86,7 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
   return (
     <div
       ref={ref}
-      className={`card${animate ? ' card--anim' : ''}${back ? ' card--back' : ''}${peek ? ' card--peek' : ''}`}
+      className={`card${animate ? ' card--anim' : ''}${back ? ' card--back' : ''}${peek ? ' card--peek' : ''}${project ? ' card--project' : ''}`}
       style={style}
       onClick={isOpen ? undefined : onTap}
       onPointerDown={onPointerDown}

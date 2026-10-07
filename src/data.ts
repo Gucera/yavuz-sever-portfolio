@@ -20,6 +20,10 @@ export type Tab = {
   ink: string
 }
 
+/** Project case studies — collected in a folder in the grid view. */
+export const isProject = (tab: Tab) =>
+  tab.extra === 'case' || tab.extra === 'nisa' || tab.extra === 'dimark' || tab.extra === 'candy'
+
 export const PROFILE = {
   name: 'Yavuz Selim Sever',
   role: 'software developer · london',

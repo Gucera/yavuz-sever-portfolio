@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type React from 'react'
 import gsap from 'gsap'
-import { PROFILE, TABS } from './data'
-import { cardStyle, sidePad, type ViewMode, type Viewport } from './layout'
+import { PROFILE, TABS, isProject } from './data'
+import { cardStyle, gridGeometry, sidePad, type ViewMode, type Viewport } from './layout'
 import { TabCard } from './TabCard'
 
 const MOBILE_BP = 768
@@ -94,6 +94,9 @@ export default function App() {
   const [view, setView] = useState<ViewMode>('stack')
   const [flying, setFlying] = useState(false)
   const [landing, setLanding] = useState(false)
+  // grid view: the projects live in an iOS-style folder
+  const [folderOpen, setFolderOpen] = useState(false)
+  const [folderRaised, setFolderRaised] = useState(false)
   const flightFrom = useRef<React.CSSProperties[] | null>(null)
 
   const stageRef = useRef<HTMLElement>(null)
@@ -106,15 +109,34 @@ export default function App() {
   const stackPos = (i: number) => n - 1 - visible.indexOf(i)
   const openV = openIdx === -1 ? -1 : stackPos(openIdx)
   const hoverV = openIdx === -1 && hoverIdx !== -1 && !gone.includes(hoverIdx) ? stackPos(hoverIdx) : -1
+  const plainTabs = visible.filter((i) => !isProject(TABS[i]))
+  const projectTabs = visible.filter((i) => isProject(TABS[i]))
   const slotOf = (i: number) => {
     const isGone = gone.includes(i)
-    return { v: isGone ? n : stackPos(i), n, openV, hoverV, self: openIdx === i, gone: isGone }
+    const project = isProject(TABS[i])
+    const grid = {
+      r: Math.max(0, project ? projectTabs.indexOf(i) : plainTabs.indexOf(i)),
+      nTabs: plainTabs.length,
+      nProjects: projectTabs.length,
+      project,
+      folderOpen,
+      raised: folderRaised,
+    }
+    return { v: isGone ? n : stackPos(i), n, openV, hoverV, self: openIdx === i, gone: isGone, grid }
   }
+
+  // The folder's cards stay above the grid until the close animation has finished.
+  useEffect(() => {
+    if (folderOpen) return setFolderRaised(true)
+    const t = window.setTimeout(() => setFolderRaised(false), 700)
+    return () => window.clearTimeout(t)
+  }, [folderOpen])
 
   // Switch between the stack and the grid: remember where every card is now, then let the
   // layout effect below fly each one along an arc to its new place.
   const toggleView = () => {
     if (openIdx !== -1 || flying) return
+    if (folderOpen) return setFolderOpen(false)
     const next: ViewMode = view === 'stack' ? 'grid' : 'stack'
     if (!reducedMotion()) {
       flightFrom.current = TABS.map((_, i) => cardStyle(vp, { ...slotOf(i), hoverV: -1 }, view))
@@ -274,7 +296,7 @@ export default function App() {
   // Escape closes; ←/→ step through the tabs (→ from the stack opens the first one).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') return close()
+      if (e.key === 'Escape') return openIdx === -1 && folderOpen ? setFolderOpen(false) : close()
       if ((e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') || e.metaKey || e.ctrlKey || e.altKey) return
       if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return
       const pos = visible.indexOf(openIdx)
@@ -285,7 +307,7 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [close, openIdx, visible])
+  }, [close, openIdx, visible, folderOpen])
 
   // Every tab has its own link (#quick-label…): keep the URL, title and history in sync,
   // so shared links open the right tab and the browser/phone back button closes it.
@@ -316,7 +338,10 @@ export default function App() {
   const pad = sidePad(vp)
 
   return (
-    <main className={`stage stage--${view}${flying ? ' stage--flying' : ''}${landing ? ' stage--landing' : ''}`} ref={stageRef}>
+    <main
+      className={`stage stage--${view}${flying ? ' stage--flying' : ''}${landing ? ' stage--landing' : ''}${folderOpen ? ' stage--folder-open' : ''}`}
+      ref={stageRef}
+    >
       <div className="header" style={{ left: pad, right: pad }} aria-hidden={openIdx > -1 || undefined}>
         <div className="header__id">
           <h1 className="header__name" aria-label={PROFILE.name}>
@@ -355,6 +380,40 @@ export default function App() {
       </div>
 
       <div className="stack" ref={stackRef}>
+      {view === 'grid' && projectTabs.length > 0 && (() => {
+        const geo = gridGeometry(vp, plainTabs.length, projectTabs.length)
+        const r = folderOpen ? geo.panel : geo.folder
+        return (
+          <>
+            <div
+              className={`folder-backdrop${folderOpen && openIdx === -1 ? ' is-open' : ''}`}
+              style={{ zIndex: folderRaised ? 240 : -1 }}
+              onClick={() => setFolderOpen(false)}
+            />
+            <div
+              className={`folder${folderOpen ? ' is-open' : ''}${flying ? ' is-flying' : ''}${openIdx !== -1 ? ' is-hidden' : ''}`}
+              style={{ top: r.top, left: r.left, width: r.width, height: r.height, zIndex: folderRaised ? 250 : 0 }}
+              onClick={() => !folderOpen && setFolderOpen(true)}
+              role={folderOpen ? 'dialog' : 'button'}
+              aria-label={folderOpen ? 'Projects' : `Open Projects folder (${projectTabs.length})`}
+              tabIndex={folderOpen ? -1 : 0}
+              onKeyDown={(e) => {
+                if (!folderOpen && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault()
+                  setFolderOpen(true)
+                }
+              }}
+            >
+              <span className="folder__title">Projects</span>
+              <span className="card__chip folder__chip" aria-hidden>
+                <i />
+                Projects
+                <em>{projectTabs.length}</em>
+              </span>
+            </div>
+          </>
+        )
+      })()}
       {TABS.map((tab, i) => {
         const isGone = gone.includes(i)
         const self = openIdx === i
@@ -367,7 +426,8 @@ export default function App() {
             }}
             tab={tab}
             num={String(i + 1).padStart(2, '0')}
-            style={cardStyle(vp, { v, n, openV, hoverV, self, gone: isGone }, view)}
+            style={cardStyle(vp, slotOf(i), view)}
+            project={isProject(tab)}
             isOpen={self}
             animate={introDone && !flying}
             hidden={isGone || (openIdx > -1 && !self)}
@@ -375,7 +435,10 @@ export default function App() {
             peek={openIdx === -1 && hoverIdx === i}
             onHover={(on) => setHoverIdx((h) => (on ? i : h === i ? -1 : h))}
             onOpen={() => {
-              if (openIdx === -1) setOpenIdx(i)
+              if (openIdx !== -1) return
+              // in the grid, a project inside the closed folder opens the folder first
+              if (view === 'grid' && isProject(tab) && !folderOpen) setFolderOpen(true)
+              else setOpenIdx(i)
             }}
             onX={(e) => {
               e.stopPropagation()
