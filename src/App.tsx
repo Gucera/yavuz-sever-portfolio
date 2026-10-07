@@ -621,6 +621,7 @@ export default function App() {
       return
     }
     setShuffling(true)
+    setFlipped([]) // faces are turned by the data-facedown attribute below, without re-rendering
     const ids = visible.filter((i) => cardRefs.current[i])
     const els = ids.map((i) => cardRefs.current[i]!)
     const n = els.length
@@ -652,6 +653,7 @@ export default function App() {
       defaults: { overwrite: false },
       onComplete: () => {
         els.forEach((el, k) => {
+          delete el.dataset.facedown
           el.style.translate = ''
           el.style.rotate = ''
           el.style.scale = ''
@@ -667,7 +669,7 @@ export default function App() {
       tl.call(() => z(k, 30 + k), undefined, at)
       tl.to(st[k], { g: 1, s: S, duration: 0.55, ease: 'power3.inOut', onUpdate: () => draw(k) }, at)
       tl.to(st[k], { keyframes: { sx: [1, 0.02, 1] }, duration: 0.26, ease: 'none', onUpdate: () => draw(k) }, at + 0.12)
-      tl.call(() => setFlipped((f) => (f.includes(ids[k]) ? f : [...f, ids[k]])), undefined, at + 0.25)
+      tl.call(() => (els[k].dataset.facedown = '1'), undefined, at + 0.25)
     })
     // the deck is together: cards on the table rejoin the hand, out of sight in the pile
     tl.call(() => {
@@ -736,7 +738,7 @@ export default function App() {
       }, undefined, at)
       tl.to(st[k], { g: 0, s: 1, duration: 0.6, ease: 'power3.out', onUpdate: () => draw(k) }, at)
       tl.to(st[k], { keyframes: { sx: [1, 0.02, 1] }, duration: 0.26, ease: 'none', onUpdate: () => draw(k) }, at + 0.08)
-      tl.call(() => setFlipped((f) => f.filter((x) => x !== ids[k])), undefined, at + 0.21)
+      tl.call(() => delete els[k].dataset.facedown, undefined, at + 0.21)
     })
   }
 

@@ -1,5 +1,5 @@
 import gsap from 'gsap'
-import { forwardRef, useRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
+import { forwardRef, memo, useCallback, useRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
 import type { Tab } from './data'
 import { EducationBody } from './Education'
 import { AboutBody } from './About'
@@ -175,21 +175,11 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
     onOpen()
   }
 
-  const meta = (
-    <dl className="card__meta" data-reveal>
-      {tab.meta.map(([label, value]) => (
-        <div key={label} style={{ display: 'contents' }}>
-          <dt>{label}</dt>
-          <dd>{value}</dd>
-        </div>
-      ))}
-    </dl>
-  )
-  const next = (
-    <button className="card__next" onClick={onNext} tabIndex={isOpen ? 0 : -1} data-reveal>
-      next tab →
-    </button>
-  )
+  // the page content only depends on the tab and whether it's open, so hovering, picking or
+  // shuffling cards doesn't re-render every page; onNext goes through a ref to stay stable
+  const onNextRef = useRef(onNext)
+  onNextRef.current = onNext
+  const next = useCallback((e: MouseEvent) => onNextRef.current(e), [])
 
   return (
     <div
@@ -278,52 +268,75 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
           <span className="card__num">{num}</span>
         </div>
 
-        <header className="card__head">
-          <h2 className="card__title" data-reveal>
-            {tab.title}
-          </h2>
-          <div className="card__tags" data-reveal>
-            <span>{tab.kind}</span>
-            <span>{tab.year}</span>
-          </div>
-        </header>
-
-        {tab.extra === 'about' ? (
-          <AboutBody tab={tab} meta={meta} next={next} />
-        ) : tab.extra === 'education' ? (
-          <EducationBody tab={tab} active={isOpen} meta={meta} next={next} />
-        ) : tab.extra === 'experience' ? (
-          <ExperienceBody tab={tab} meta={meta} next={next} />
-        ) : tab.extra === 'candy' ? (
-          <CandyBody tab={tab} active={isOpen} meta={meta} next={next} />
-        ) : tab.extra === 'dimark' ? (
-          <DimarkBody tab={tab} active={isOpen} meta={meta} next={next} />
-        ) : tab.extra === 'nisa' ? (
-          <NisaBody tab={tab} active={isOpen} meta={meta} next={next} />
-        ) : tab.extra === 'case' && CASE_STUDIES[tab.title] ? (
-          <CaseStudyBody tab={tab} study={CASE_STUDIES[tab.title]} active={isOpen} meta={meta} next={next} />
-        ) : (
-          <div className="card__body">
-            <div className="card__text">
-              <p className="card__lead" data-reveal>
-                {tab.description}
-              </p>
-              {meta}
-              {next}
-            </div>
-
-            <div className="card__media">
-              <div className="media media--hero" data-reveal>
-                {tab.media[0]}
-              </div>
-              <div className="media__row" data-reveal>
-                <div className="media media--detail">{tab.media[1]}</div>
-                <div className="media media--detail">{tab.media[2]}</div>
-              </div>
-            </div>
-          </div>
-        )}
+        <CardContent tab={tab} isOpen={isOpen} onNext={next} />
       </article>
     </div>
+  )
+})
+
+const CardContent = memo(function CardContent({ tab, isOpen, onNext }: { tab: Tab; isOpen: boolean; onNext: (e: MouseEvent) => void }) {
+  const meta = (
+    <dl className="card__meta" data-reveal>
+      {tab.meta.map(([label, value]) => (
+        <div key={label} style={{ display: 'contents' }}>
+          <dt>{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+  const next = (
+    <button className="card__next" onClick={onNext} tabIndex={isOpen ? 0 : -1} data-reveal>
+      next tab →
+    </button>
+  )
+  return (
+    <>
+      <header className="card__head">
+        <h2 className="card__title" data-reveal>
+          {tab.title}
+        </h2>
+        <div className="card__tags" data-reveal>
+          <span>{tab.kind}</span>
+          <span>{tab.year}</span>
+        </div>
+      </header>
+
+      {tab.extra === 'about' ? (
+        <AboutBody tab={tab} meta={meta} next={next} />
+      ) : tab.extra === 'education' ? (
+        <EducationBody tab={tab} active={isOpen} meta={meta} next={next} />
+      ) : tab.extra === 'experience' ? (
+        <ExperienceBody tab={tab} meta={meta} next={next} />
+      ) : tab.extra === 'candy' ? (
+        <CandyBody tab={tab} active={isOpen} meta={meta} next={next} />
+      ) : tab.extra === 'dimark' ? (
+        <DimarkBody tab={tab} active={isOpen} meta={meta} next={next} />
+      ) : tab.extra === 'nisa' ? (
+        <NisaBody tab={tab} active={isOpen} meta={meta} next={next} />
+      ) : tab.extra === 'case' && CASE_STUDIES[tab.title] ? (
+        <CaseStudyBody tab={tab} study={CASE_STUDIES[tab.title]} active={isOpen} meta={meta} next={next} />
+      ) : (
+        <div className="card__body">
+          <div className="card__text">
+            <p className="card__lead" data-reveal>
+              {tab.description}
+            </p>
+            {meta}
+            {next}
+          </div>
+
+          <div className="card__media">
+            <div className="media media--hero" data-reveal>
+              {tab.media[0]}
+            </div>
+            <div className="media__row" data-reveal>
+              <div className="media media--detail">{tab.media[1]}</div>
+              <div className="media media--detail">{tab.media[2]}</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 })
