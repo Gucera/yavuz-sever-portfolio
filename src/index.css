@@ -2435,7 +2435,7 @@ a {
 }
 
 /* only in the grid, once the cards have landed */
-.stage--grid:not(.stage--flying) .card[role='button'] .card__chip {
+.stage--grid .card[role='button'] .card__chip {
   opacity: 1;
   transform: none;
 }
@@ -2555,7 +2555,7 @@ a {
   opacity: 0 !important;
 }
 
-.stage--grid.stage--folder-open:not(.stage--flying) .card--project[role='button'] .card__chip {
+.stage--grid.stage--folder-open .card--project[role='button'] .card__chip {
   opacity: 1 !important;
   transform: none;
 }
@@ -2707,7 +2707,8 @@ a {
   outline-offset: -4px;
 }
 
-.stage--cards:not(.stage--flying):not(.stage--dealing) .card[role='button'] .card__chip {
+/* labels stay on the cards through view changes (no blink); they leave only when a card is dealt */
+.stage--cards:not(.stage--dealing) .card[role='button'] .card__chip {
   opacity: 1;
   transform: none;
 }
@@ -2805,7 +2806,7 @@ a {
   transform: rotate(180deg);
 }
 
-.stage--cards:not(.stage--flying) .card[role='button']:not([data-camera]) .card__pip {
+.stage--cards .card[role='button']:not([data-camera]) .card__pip {
   opacity: 1;
 }
 
