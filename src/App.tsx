@@ -474,12 +474,12 @@ export default function App() {
       },
     })
     // 1. straight from the hand onto the table: a short arc while it tips back and lies down
-    tl.to(el, { ...table, duration: 0.8, ease: 'power3.out' })
-    tl.to(page, { scale: table.width / vp.w, duration: 0.8, ease: 'power3.out' }, '<') // thumbnail follows the card's size
+    tl.to(el, { ...table, duration: 0.6, ease: 'power3.out' })
+    tl.to(page, { scale: table.width / vp.w, duration: 0.6, ease: 'power3.out' }, '<') // thumbnail follows the card's size
     tl.call(() => {
       play('place')
       haptic()
-    }, undefined, 0.72)
+    }, undefined, 0.54)
     tl.to(
       st,
       {
@@ -489,7 +489,7 @@ export default function App() {
           rx: [st.rx, (st.rx + TABLE_TILT) / 2, TABLE_TILT],
           easeEach: 'sine.inOut',
         },
-        duration: 0.8,
+        duration: 0.6,
         ease: 'power3.out',
         onUpdate: apply,
       },
@@ -528,12 +528,12 @@ export default function App() {
     }
     tl.call(() => {
       el.dataset.camera = '1' // fades the card's cream border and corners as we close in
-    }, undefined, '+=0.12')
-    tl.to(cam, { ...target, duration: 1.1, ease: 'power3.inOut', onUpdate: shoot }, '<')
-    tl.to(st, { rx: 0, fa: 0, duration: 1.1, ease: 'power3.inOut', onUpdate: apply }, '<')
-    tl.to(el, { borderRadius: 0, duration: 1.1, ease: 'power3.inOut' }, '<')
+    }, undefined, '+=0.04')
+    tl.to(cam, { ...target, duration: 0.75, ease: 'power3.inOut', onUpdate: shoot }, '<')
+    tl.to(st, { rx: 0, fa: 0, duration: 0.75, ease: 'power3.inOut', onUpdate: apply }, '<')
+    tl.to(el, { borderRadius: 0, duration: 0.75, ease: 'power3.inOut' }, '<')
     // the thumbnail sat under the card's tab bar; the open page starts at the very top
-    tl.to(page, { y: 0, duration: 1.1, ease: 'power3.inOut' }, '<')
+    tl.to(page, { y: 0, duration: 0.75, ease: 'power3.inOut' }, '<')
     return () => {
       tl.kill()
     }
