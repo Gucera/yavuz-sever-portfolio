@@ -35,6 +35,8 @@ type Props = {
   flipping?: boolean
   /** grid view: never opened by this visitor yet */
   isNew?: boolean
+  /** cards view: lying face up on the table */
+  onTable?: boolean
   onHover: (on: boolean) => void
   /** touch is true when opened by a finger tap (the cards view uses tap-to-pick, tap-to-deal) */
   onOpen: (touch?: boolean) => void
@@ -46,7 +48,7 @@ type Props = {
 let touchDown = false
 
 export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
-  { tab, num, style, isOpen, animate, hidden, back, peek, project, pip, flingable, onFling, onLongPress, flipped, flipping, isNew, onHover, onOpen, onX, onNext },
+  { tab, num, style, isOpen, animate, hidden, back, peek, project, pip, flingable, onFling, onLongPress, flipped, flipping, isNew, onTable, onHover, onOpen, onX, onNext },
   ref,
 ) {
   const onKey = (e: KeyboardEvent) => {
@@ -116,11 +118,15 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
           ease: 'power2.in',
           onUpdate: set,
           onComplete: () => {
+            // stay off-screen and invisible: the closed state sits on the other side, so the
+            // card must not be seen travelling back across the stack
+            el.style.visibility = 'hidden'
             onFling?.()
             window.setTimeout(() => {
               el.style.translate = ''
               el.style.rotate = ''
-            }, 80)
+              el.style.visibility = ''
+            }, 800)
           },
         })
       } else {
@@ -192,7 +198,7 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
         if (typeof ref === 'function') ref(node)
         else if (ref) ref.current = node
       }}
-      className={`card${animate ? ' card--anim' : ''}${back ? ' card--back' : ''}${peek ? ' card--peek' : ''}${project ? ' card--project' : ''}${flipped ? ' card--flipped' : ''}${flipping ? ' card--flipping' : ''}`}
+      className={`card${animate ? ' card--anim' : ''}${back ? ' card--back' : ''}${peek ? ' card--peek' : ''}${project ? ' card--project' : ''}${flipped ? ' card--flipped' : ''}${flipping ? ' card--flipping' : ''}${onTable ? ' card--table' : ''}`}
       style={style}
       onClick={isOpen ? undefined : onTap}
       onPointerDown={onPointerDown}
@@ -211,6 +217,11 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
         onLongPress?.()
       }}
       onKeyDown={onKey}
+      // a closed card is never scrolled (focus or find-in-page could otherwise leave its
+      // thumbnail, label and corner index shifted)
+      onScroll={(e) => {
+        if (!isOpen && e.currentTarget.scrollTop) e.currentTarget.scrollTop = 0
+      }}
       role={isOpen ? 'dialog' : 'button'}
       aria-modal={isOpen || undefined}
       aria-label={isOpen ? tab.title : `Open ${tab.title}`}
@@ -249,7 +260,7 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
           <span className="card__back-hint">tap to deal</span>
         </div>
       )}
-      <article className="card__page" style={{ background: tab.bg, color: tab.ink }}>
+      <article className="card__page" style={{ background: tab.bg, color: tab.ink }} inert={!isOpen}>
         <div className="card__bar">
           <button
             className="card__x"

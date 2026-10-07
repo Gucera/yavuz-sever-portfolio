@@ -248,16 +248,19 @@ export function handCard(vp: Viewport, r: number, n: number) {
   }
 }
 
+/** How far a card on the table lies back, seen from the player's seat. */
+export const TABLE_TILT = 50
+
 /** A card left face up on the table after it was dealt and closed (solitaire-like row). */
 function tableCard(vp: Viewport, t: number, nt: number) {
   const { cw, ch } = handCardSize(vp)
-  const w = cw * 0.62
-  const h = ch * 0.62
+  const w = cw * 0.78
+  const h = ch * 0.78
   const gap = vp.mobile ? 10 : 22
   const span = vp.w - (vp.mobile ? 32 : 160) - w
   const step = nt > 1 ? Math.min(w + gap, span / (nt - 1)) : 0
   const left = vp.w / 2 - (step * (nt - 1)) / 2 - w / 2 + t * step
-  const top = vp.h * (vp.mobile ? 0.36 : 0.33) - h / 2
+  const top = vp.h * (vp.mobile ? 0.37 : 0.35) - h / 2
   return { top, left, width: w, height: h, angle: (((t * 37) % 11) - 5) * 1.2 }
 }
 
@@ -279,8 +282,12 @@ function handStyle(vp: Viewport, { v, n, openV, hoverV, gone, cards }: Slot): CS
     width: c.width,
     height: c.height,
     borderRadius: vp.mobile ? 10 : 14,
-    // translate after the fan rotation, so a hovered card slides up out of the hand along its own axis
-    transform: `${IY} translateY(${-lift}px) scale(${lift ? 1.04 : 1})`,
+    // translate after the fan rotation, so a hovered card slides up out of the hand along its own axis;
+    // cards on the table lie back on the felt (same tilt as a card being dealt onto it)
+    transform: onTable
+      ? `perspective(1600px) ${IY} rotateX(${TABLE_TILT}deg) translateY(${-lift}px)`
+      : `${IY} translateY(${-lift}px) scale(${lift ? 1.04 : 1})`,
+    transformOrigin: onTable ? '50% 50%' : undefined,
     boxShadow: lift ? '0 30px 60px rgba(0,0,0,.65)' : '0 12px 30px rgba(0,0,0,.55)',
   } as CSSProperties
   if (gone) return { ...s, transform: `${IY} translateY(${vp.h}px)`, opacity: 0, pointerEvents: 'none' }

@@ -2890,10 +2890,6 @@ a {
   }
 }
 
-/* the card being hovered/pressed lifts out of the hand in front of its neighbours */
-.stage--cards:not(.stage--flying):not(.stage--dealing) .card[role='button'].card--peek {
-  z-index: 50 !important;
-}
 
 /* ================= view features ================= */
 
@@ -3318,27 +3314,23 @@ a {
 
 /* ---- cards: shuffle, toast, sound ---- */
 .shuffle {
-  position: fixed;
-  left: 50%;
-  top: 46%;
-  translate: -50% 0;
-  z-index: 40;
-  height: 40px;
-  padding: 0 18px;
-  border-radius: 20px;
-  border: 1px solid rgba(243, 239, 228, 0.5);
-  background: rgba(14, 31, 22, 0.6);
-  color: #f3efe4;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(198, 255, 61, 0.45);
+  background: transparent;
+  color: var(--accent);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 .shuffle:hover {
-  background: #f3efe4;
-  color: #111;
+  background: var(--accent);
+  color: var(--bg);
 }
 @media (max-width: 767px) {
-  .shuffle {
-    top: 38%;
+  .shuffle__label {
+    display: none;
   }
 }
 @keyframes riffle {
@@ -3385,4 +3377,20 @@ a {
   border-radius: 14px;
   background: transparent;
   font-size: 14px;
+}
+
+/* the dragged tile jumps to its new slot instantly; its translate keeps it under the finger */
+.stage--editing .is-dragging {
+  transition: none !important;
+}
+
+/* table cards stay visible while a card is dealt next to them */
+.stage--dealing .card.card--table:not([data-dealt]) {
+  opacity: 1 !important;
+  translate: none;
+}
+
+/* table cards carried by the camera are moved every frame: no transition lag */
+.card[data-follow] {
+  transition: none !important;
 }

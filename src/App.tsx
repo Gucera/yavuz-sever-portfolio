@@ -7,7 +7,7 @@ import { INCOGNITO, PROFILE, TABS, isProject } from './data'
 import { bestHand } from './poker'
 import { search } from './search'
 import { haptic, isSoundOn, play, setSoundOn } from './sound'
-import { cardStyle, gridGeometry, sidePad, type ViewMode, type Viewport } from './layout'
+import { TABLE_TILT, cardStyle, gridGeometry, sidePad, type ViewMode, type Viewport } from './layout'
 import { TabCard } from './TabCard'
 
 const MOBILE_BP = 768
@@ -121,6 +121,7 @@ export default function App() {
   const [shuffling, setShuffling] = useState(false)
   const [soundOn, setSoundState] = useState(isSoundOn)
   const lastDealt = useRef(-1)
+  const dealFrom = useRef<{ top: number; left: number; width: number; height: number; fa: number; rx: number; pt: number } | null>(null)
   const lastFlip = useRef(0)
   const skipReveal = useRef(false) // a dealt card opens in place: don't replay the content reveal
   const flightFrom = useRef<React.CSSProperties[] | null>(null)
@@ -367,6 +368,21 @@ export default function App() {
   // above until it fills the screen and the tab opens.
   const dealCard = (i: number) => {
     if (dealing !== -1 || flying) return
+    const el = cardRefs.current[i]
+    if (el) {
+      const num = (v: string) => parseFloat(v) || 0
+      dealFrom.current = {
+        top: num(el.style.top),
+        left: num(el.style.left),
+        width: num(el.style.width),
+        height: num(el.style.height),
+        fa: num(el.style.getPropertyValue('--fa')),
+        rx: el.classList.contains('card--table') ? TABLE_TILT : 0,
+        pt: num(getComputedStyle(el).getPropertyValue('--pt')),
+      }
+    }
+    // it joins the cards on the table now: the others slide over to make room for it
+    setOnTable((t) => (t.includes(i) ? t : [...t, i]))
     lastDealt.current = i
     setFlipped((f) => f.filter((x) => x !== i))
     play('draw')
@@ -386,17 +402,42 @@ export default function App() {
       return
     }
     const num = (v: string) => parseFloat(v) || 0
-    const from = { top: num(el.style.top), left: num(el.style.left), width: num(el.style.width), height: num(el.style.height) }
-    const pt = num(getComputedStyle(el).getPropertyValue('--pt'))
-    const st = { fa: num(el.style.getPropertyValue('--fa')), lift: 0, rx: 0, s: 1 }
+    const start = dealFrom.current ?? {
+      top: num(el.style.top),
+      left: num(el.style.left),
+      width: num(el.style.width),
+      height: num(el.style.height),
+      fa: 0,
+      rx: 0,
+      pt: num(getComputedStyle(el).getPropertyValue('--pt')),
+    }
+    dealFrom.current = null
+    const from = { top: start.top, left: start.left, width: start.width, height: start.height }
+    const pt = start.pt
+    const st = { fa: start.fa, lift: 0, rx: start.rx, s: 1 }
+    gsap.set(el, from) // React already moved it to its table slot; start from the hand
     const apply = () => {
       el.style.transform = `perspective(1600px) rotate(${st.fa}deg) translateY(${st.lift}px) rotateX(${st.rx}deg) scale(${st.s})`
     }
-    // where the card lands on the table: centred and a touch smaller (the table is further away)
-    const tw = from.width * 0.92
-    const th = from.height * 0.92
-    const table = { top: vp.h * (vp.mobile ? 0.5 : 0.52) - th / 2, left: vp.w / 2 - tw / 2, width: tw, height: th }
-    const placed = (i % 2 ? 1 : -1) * 4 // left slightly askew, as if dropped by hand
+    // where the card lands: its slot in the row of cards already on the table
+    const slot = cardStyle(vp, { ...slotOf(i), hoverV: -1 }, 'cards') as Record<string, unknown>
+    const table = { top: num(String(slot.top)), left: num(String(slot.left)), width: num(String(slot.width)), height: num(String(slot.height)) }
+    const placed = num(String(slot['--fa'] ?? 0))
+    // the other cards on the table stay in shot and are carried by the camera too
+    const others = tableTabs
+      .filter((k) => k !== i)
+      .map((k) => {
+        const o = cardRefs.current[k]
+        const r = cardStyle(vp, { ...slotOf(k), hoverV: -1 }, 'cards') as Record<string, unknown>
+        return {
+          el: o,
+          page: o?.querySelector<HTMLElement>('.card__page') ?? null,
+          rect: { top: num(String(r.top)), left: num(String(r.left)), width: num(String(r.width)), height: num(String(r.height)) },
+          ps: Number(r['--ps'] ?? 1),
+          pt: num(String(r['--pt'] ?? 0)),
+        }
+      })
+      .filter((o): o is typeof o & { el: HTMLDivElement } => !!o.el)
 
     el.dataset.dealt = '1'
     gsap.set(el, { transformOrigin: '50% 50%', zIndex: 500 })
@@ -416,6 +457,16 @@ export default function App() {
           setDealing(-1)
         })
         if (tableEl) gsap.set(tableEl, { clearProps: 'transform,transformOrigin' })
+        for (const o of others) {
+          delete o.el.dataset.follow
+          Object.assign(o.el.style, {
+            top: `${o.rect.top}px`,
+            left: `${o.rect.left}px`,
+            width: `${o.rect.width}px`,
+            height: `${o.rect.height}px`,
+          })
+          if (o.page) gsap.set(o.page, { clearProps: 'transform' })
+        }
         delete el.dataset.dealt
         delete el.dataset.camera
         gsap.set(page, { clearProps: 'transform,width,minHeight' })
@@ -432,7 +483,12 @@ export default function App() {
     tl.to(
       st,
       {
-        keyframes: { lift: [0, -from.height * 0.18, 0], fa: [st.fa, st.fa / 2, placed], rx: [0, 30, 55], easeEach: 'sine.inOut' },
+        keyframes: {
+          lift: [0, -from.height * 0.18, 0],
+          fa: [st.fa, (st.fa + placed) / 2, placed],
+          rx: [st.rx, (st.rx + TABLE_TILT) / 2, TABLE_TILT],
+          easeEach: 'sine.inOut',
+        },
         duration: 0.8,
         ease: 'power3.out',
         onUpdate: apply,
@@ -454,6 +510,14 @@ export default function App() {
     }
     const shoot = () => {
       if (tableEl) gsap.set(tableEl, { x: cam.dx, y: cam.dy, scale: cam.z })
+      for (const o of others) {
+        o.el.dataset.follow = '1'
+        o.el.style.left = `${cx + cam.dx + (o.rect.left - cx) * cam.z}px`
+        o.el.style.top = `${cy + cam.dy + (o.rect.top - cy) * cam.z}px`
+        o.el.style.width = `${o.rect.width * cam.z}px`
+        o.el.style.height = `${o.rect.height * cam.z}px`
+        if (o.page) gsap.set(o.page, { y: o.pt * cam.z, scale: o.ps * cam.z, transformOrigin: '0 0' })
+      }
       const w = table.width * cam.z
       const h = table.height * cam.z
       el.style.width = `${w}px`
@@ -540,8 +604,11 @@ export default function App() {
     lastFlip.current = now
     play('draw')
     setFlipping(i)
-    window.setTimeout(() => setFlipped((f) => (f.includes(i) ? f.filter((x) => x !== i) : [...f, i])), 170)
-    window.setTimeout(() => setFlipping(-1), 340)
+    // squash to the edge, swap faces and open straight back up — no hold at the edge
+    window.setTimeout(() => {
+      setFlipped((f) => (f.includes(i) ? f.filter((x) => x !== i) : [...f, i]))
+      setFlipping(-1)
+    }, 170)
   }
 
   // Grid edit mode: drag a tile (or the folder) to reorder; tap outside or Done to finish.
@@ -590,7 +657,7 @@ export default function App() {
         if (order.indexOf(key) !== best) {
           const next = order.filter((k) => k !== key)
           next.splice(best, 0, key)
-          setGridOrder(next)
+          flushSync(() => setGridOrder(next))
         }
         // keep the tile under the finger even after its home slot moved
         const shiftX = base0.x - num(target.style.left)
@@ -749,6 +816,11 @@ export default function App() {
               ))}
             </div>
             {view === 'cards' && (
+              <button className="shuffle" onClick={shuffle} disabled={dealing !== -1}>
+                ♣<span className="shuffle__label"> Shuffle</span>
+              </button>
+            )}
+            {view === 'cards' && (
               <button
                 className="sound-toggle"
                 aria-pressed={soundOn}
@@ -838,8 +910,9 @@ export default function App() {
             flipped={view === 'cards' && flipped.includes(i)}
             flipping={flipping === i}
             isNew={view === 'grid' && !opened.includes(tab.title)}
+            onTable={view === 'cards' && tableTabs.includes(i)}
             isOpen={self}
-            animate={introDone && !flying && dealing === -1}
+            animate={introDone && !flying && dealing !== i}
             hidden={isGone || (openIdx > -1 && !self)}
             back={view === 'stack' && !flying && openIdx === -1 && !isGone && v !== n - 1}
             peek={openIdx === -1 && lifted === i}
@@ -975,11 +1048,6 @@ export default function App() {
       )}
 
       {/* cards: shuffle and the poker easter egg */}
-      {view === 'cards' && openIdx === -1 && dealing === -1 && (
-        <button className="shuffle" onClick={shuffle}>
-          ♣ Shuffle
-        </button>
-      )}
       {toast && <div className="toast" role="status">{toast}</div>}
 
       {/* each tab address counts as its own page view in Vercel Analytics */}
