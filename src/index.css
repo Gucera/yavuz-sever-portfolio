@@ -1135,6 +1135,10 @@ a {
   background: var(--accent);
   animation: run-blink 1s steps(1) infinite;
 }
+/* no blinking inside a closed card: it would repaint the card every second for nothing */
+.card:not([role='dialog']) .run__cursor {
+  animation-play-state: paused;
+}
 
 @keyframes run-blink {
   50% {
@@ -2385,6 +2389,13 @@ a {
 .stage--flying .card {
   contain: layout paint style;
 }
+/* big soft shadows are re-rendered every frame a card moves or resizes; while cards are in
+   motion they get a small one (the eye can't tell mid-flight) */
+.stage--flying .card,
+.stage--dealing .card,
+.stage--shuffling .card[role='button'] {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.42) !important;
+}
 
 /* right after landing in the stack, hide back-of-stack content at once (it's covered anyway)
    instead of fading six tabs on the landing frame */
@@ -2538,9 +2549,9 @@ a {
 .folder-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(8, 8, 10, 0.45);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  /* a flat dim instead of a full-screen backdrop blur, which re-blurs every frame while the
+     tiles behind it move */
+  background: rgba(8, 8, 10, 0.72);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.45s var(--ease);
@@ -2752,6 +2763,8 @@ a {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
     radial-gradient(ellipse 55% 45% at 50% 64%, #24563c 0%, #173a28 45%, #0e1f16 70%, var(--bg) 92%);
   animation: table-in 0.6s var(--ease) both;
+  /* its own layer: the noise texture is painted once, never again when cards move over it */
+  will-change: transform;
 }
 
 @keyframes table-in {
@@ -3428,15 +3441,6 @@ a {
 /* face down, the page under the back isn't painted at all */
 .card[data-facedown] .card__page {
   visibility: hidden;
-}
-.stage--shuffling .card[role='button'] {
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
-}
-@media (max-width: 767px), (pointer: coarse) {
-  /* big soft shadows on moving layers are costly on phones */
-  .stage--shuffling .card[role='button'] {
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
-  }
 }
 .toast {
   position: fixed;

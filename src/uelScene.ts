@@ -135,6 +135,7 @@ export async function mountUelBadge(host: HTMLElement, theme: BadgeTheme): Promi
   const ro = new ResizeObserver(() => {
     fit()
     drawn = false
+    wake()
   })
   ro.observe(host)
 
@@ -150,6 +151,7 @@ export async function mountUelBadge(host: HTMLElement, theme: BadgeTheme): Promi
   let visible = true
   const io = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
+    if (visible) wake()
   })
   io.observe(host)
 
@@ -171,9 +173,21 @@ export async function mountUelBadge(host: HTMLElement, theme: BadgeTheme): Promi
     }
     renderer.render(scene, camera)
   }
-  renderer.setAnimationLoop(tick)
+  // The loop only runs while the Education tab is open, or until a closed card has its one
+  // still frame; then it stops completely. Opening the tab, resizing or scrolling it into view
+  // starts it again.
+  const isOpen = () => card?.getAttribute('role') === 'dialog'
+  const run = () => {
+    tick()
+    if (!isOpen() && (drawn || !visible)) renderer.setAnimationLoop(null)
+  }
+  const wake = () => renderer.setAnimationLoop(run)
+  const mo = card ? new MutationObserver(wake) : null
+  mo?.observe(card!, { attributes: true, attributeFilter: ['role'] })
+  wake()
 
   return () => {
+    mo?.disconnect()
     renderer.setAnimationLoop(null)
     window.removeEventListener('pointermove', onPointer)
     ro.disconnect()
