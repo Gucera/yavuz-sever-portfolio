@@ -1,0 +1,276 @@
+/* ---------- candy cargo (pink card, purple + orange) ---------- */
+
+.candy {
+  --dmk-orange: #5b1fa8;
+  --candy-purple: #5b1fa8;
+  --candy-orange: #ff8a00;
+}
+
+.candy .exp__headline,
+.candy .panel__label {
+  color: var(--candy-purple);
+}
+
+.candy .cs__dark {
+  background: var(--candy-purple);
+  color: #fff;
+  border-color: var(--candy-purple);
+}
+
+.candy .cs__dark .panel__label {
+  color: #ffd6f2;
+}
+
+.candy .exp__num {
+  background: var(--candy-orange);
+  color: #1a0b2e;
+}
+
+.candy .cs__features li {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.candy .exp__stack li {
+  background: #1a0b2e;
+  color: #fff;
+  border-color: #1a0b2e;
+}
+
+.candy .dmk__visit {
+  color: #fff;
+}
+
+/* phone mockup */
+.cc {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  min-height: 460px;
+}
+
+.cc__phone {
+  position: relative;
+  width: 270px;
+  height: 540px;
+  padding: 30px 12px 14px;
+  border-radius: 40px;
+  background: #fff;
+  border: 10px solid #1a0b2e;
+  box-shadow: 0 30px 60px rgba(26, 11, 46, 0.35);
+  overflow: hidden;
+  color: #1a0b2e;
+}
+
+.cc__notch {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 80px;
+  height: 18px;
+  margin-left: -40px;
+  border-radius: 10px;
+  background: #1a0b2e;
+}
+
+.cc__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #5b1fa8, #ff4fa3 70%, #ff8a00);
+  color: #fff;
+}
+
+.cc__head strong {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+}
+
+.cc__chips {
+  margin: 10px -12px 0;
+  overflow: hidden;
+}
+
+.cc__chips-track {
+  display: flex;
+  gap: 6px;
+  width: max-content;
+  padding-left: 12px;
+}
+
+.cc__chips span {
+  padding: 5px 10px;
+  border-radius: 12px;
+  background: #f3e9ff;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cc__chips span.is-on {
+  background: #5b1fa8;
+  color: #fff;
+}
+
+.cc__controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.cc__controls span {
+  padding: 6px;
+  border-radius: 8px;
+  border: 1.5px solid #1a0b2e;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cc__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.cc__card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px;
+  border-radius: 10px;
+  background: #fff6fb;
+  border: 1px solid #f6d3e7;
+}
+
+.cc__img {
+  position: relative;
+  aspect-ratio: 1.15;
+  border-radius: 8px;
+  background: repeating-linear-gradient(135deg, #ffe1f0 0 8px, #ffd0e8 8px 16px);
+}
+
+.cc__badge {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  padding: 2px 7px;
+  border-radius: 8px;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.cc__badge--new {
+  background: #ff8a00;
+  color: #1a0b2e;
+}
+
+.cc__badge--out {
+  background: #1a0b2e;
+  color: #fff;
+}
+
+.cc__badge--soon {
+  background: #5b1fa8;
+  color: #fff;
+}
+
+.cc__card--out .cc__img {
+  opacity: 0.5;
+}
+
+.cc__name {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.cc__pack {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: #7a5b8f;
+}
+
+.cc__login {
+  margin-top: 2px;
+  padding: 4px;
+  border-radius: 6px;
+  background: #1a0b2e;
+  color: #fff;
+  text-align: center;
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.cc__facts {
+  position: absolute;
+  right: 4%;
+  bottom: 40px;
+  width: 200px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #1a0b2e;
+  color: #fff;
+  box-shadow: 0 20px 40px rgba(26, 11, 46, 0.35);
+}
+
+.cc__facts strong {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #ff8a00;
+}
+
+.cc__facts ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cc__facts li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 11px;
+}
+
+.cc__facts li:last-child {
+  border-bottom: none;
+}
+
+.cc__facts li span {
+  opacity: 0.7;
+}
+
+@media (max-width: 1023px) {
+  .cc__facts {
+    position: static;
+    margin-top: 16px;
+  }
+  .cc {
+    flex-direction: column;
+  }
+}
+
+.cs__stats {
+  flex-wrap: wrap;
+}
+
+.cs__stats strong {
+  white-space: nowrap;
+}
+
+.candy .cs__stats strong {
+  font-size: 52px;
+}

@@ -1,0 +1,91 @@
+/* ---- grid: Spotlight ---- */
+.spot {
+  position: fixed;
+  inset: 0;
+  z-index: 700;
+  display: flex;
+  justify-content: center;
+  padding-top: 14vh;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: spot-in 0.2s var(--ease) both;
+}
+@keyframes spot-in {
+  from {
+    opacity: 0;
+  }
+}
+.spot__panel {
+  width: min(640px, calc(100% - 32px));
+  align-self: flex-start;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(40, 40, 46, 0.92);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  animation: spot-drop 0.28s var(--ease-out) both;
+}
+@keyframes spot-drop {
+  from {
+    translate: 0 -20px;
+    opacity: 0;
+  }
+}
+.spot__input {
+  width: 100%;
+  height: 58px;
+  padding: 0 20px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 20px;
+}
+.spot__results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+.spot__results:not(:empty) {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px;
+}
+.spot__results button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 12px auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #e9e9e6;
+  text-align: left;
+  font-size: 14px;
+}
+.spot__results button:hover,
+.spot__results button:focus-visible {
+  background: rgba(10, 132, 255, 0.85);
+  color: #fff;
+}
+.spot__results i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.spot__results span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.7;
+  font-size: 13px;
+}
+.spot__empty {
+  padding: 14px;
+  color: #aaa;
+  font-size: 14px;
+}

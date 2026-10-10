@@ -1,0 +1,73 @@
+/* ---- grid: iOS edit mode ---- */
+@keyframes jiggle {
+  from {
+    rotate: -1.4deg;
+  }
+  to {
+    rotate: 1.4deg;
+  }
+}
+.stage--editing .card[role='button']:not(.card--project),
+.stage--editing .folder {
+  animation: jiggle 0.16s ease-in-out infinite alternate;
+  cursor: grab;
+}
+.stage--editing .card[role='button']:nth-child(2n),
+.stage--editing .folder {
+  animation-delay: -0.08s;
+}
+.stage--editing .card[role='button']:nth-child(3n) {
+  animation-duration: 0.19s;
+}
+.stage--editing .is-dragging {
+  animation: none !important;
+  cursor: grabbing;
+  z-index: 300 !important;
+  scale: 1.06;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6) !important;
+}
+.edit-done {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 550;
+  height: 36px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 18px;
+  background: #f2f2f2;
+  color: #111;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ---- grid: badges ---- */
+.folder__badge {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.3s;
+}
+.folder.is-open .folder__badge {
+  opacity: 0;
+}
+.card__new {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #0a84ff;
+  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.25);
+}

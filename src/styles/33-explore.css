@@ -1,0 +1,187 @@
+/* ---------- header: the Explore menu (Grid, Cards, Terminal) and Hire me ---------- */
+/* while the menu (or its hint) is open, the header sits above the cards it drops over */
+.header--raised {
+  z-index: 620;
+}
+.explore {
+  position: relative;
+}
+.explore__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 10px 0 11px;
+  border: 1px solid var(--hi-soft);
+  border-radius: 15px;
+  background: transparent;
+  color: var(--hi);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s var(--ease);
+}
+.explore__btn:hover,
+.explore__btn[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--hi) 14%, transparent);
+}
+/* away from the stack, the button shows where you are */
+.explore__btn.is-away {
+  background: var(--hi);
+  color: var(--bg);
+}
+.explore__chev {
+  opacity: 0.7;
+  transition: rotate 0.2s var(--ease);
+}
+.explore__btn[aria-expanded='true'] .explore__chev {
+  rotate: 180deg;
+}
+.explore__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 700;
+  width: 280px;
+  padding: 6px;
+  border-radius: 14px;
+  background: #1d1c22;
+  box-shadow:
+    0 22px 50px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  animation: explore-in 0.18s var(--ease-out) both;
+}
+@keyframes explore-in {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+.explore__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #f2f2ee;
+  text-align: left;
+  cursor: pointer;
+}
+.explore__item:hover,
+.explore__item:focus-visible {
+  background: rgba(255, 255, 255, 0.07);
+}
+.explore__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.07);
+}
+.explore__item.is-on .explore__icon {
+  background: var(--accent);
+  color: #111;
+}
+.explore__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-family: var(--font-body);
+}
+.explore__text strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.explore__text em {
+  font-style: normal;
+  font-size: 12px;
+  opacity: 0.6;
+}
+.explore__check {
+  margin-left: auto;
+  color: var(--accent);
+}
+/* the one-time hint, pointing up at the button */
+.explore__hint {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  z-index: 690;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 250px;
+  padding: 14px 14px 12px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #111;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: normal;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  animation: explore-in 0.3s var(--ease-out) both;
+}
+.explore__hint::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 22px;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  rotate: 45deg;
+}
+.explore__hint p {
+  margin: 0;
+}
+.explore__hint button {
+  align-self: flex-end;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 12px;
+  background: #111;
+  color: var(--accent);
+  font: 600 12px var(--font-body);
+  cursor: pointer;
+}
+@media (max-width: 767px) {
+  .explore__menu {
+    width: min(280px, calc(100vw - 32px));
+  }
+}
+
+/* Hire me: the one filled button in the header */
+.hire {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 15px;
+  background: var(--accent);
+  color: #111;
+  font: 600 13px var(--font-body);
+  cursor: pointer;
+  transition: transform 0.2s var(--ease);
+}
+.hire:hover {
+  transform: translateY(-1px);
+}
+:root[data-theme='day'] .hire {
+  background: var(--hi);
+  color: var(--bg);
+}
+@media (max-width: 1439px) {
+  /* Hire me already copies the address; the long email text can go */
+  .header__row .header__email {
+    display: none;
+  }
+}

@@ -1,0 +1,28 @@
+/* ---------- header buttons: search and theme ---------- */
+.header__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  min-width: 32px;
+  justify-content: center;
+  padding: 0 9px;
+  border: 1px solid var(--hi-soft);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--hi);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  cursor: pointer;
+}
+.header__btn:hover {
+  background: color-mix(in srgb, var(--hi) 14%, transparent);
+}
+/* day theme touches: the glass dock and the card table need a little more contrast */
+:root[data-theme='day'] .dock {
+  background: rgba(29, 28, 34, 0.1);
+}
+:root[data-theme='day'] .stage--stack .card,
+:root[data-theme='day'] .stage--grid .card {
+  box-shadow: 0 14px 34px rgba(60, 50, 30, 0.22);
+}

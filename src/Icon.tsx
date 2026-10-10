@@ -87,6 +87,20 @@ const PATHS: Record<string, ReactNode> = {
     </>
   ),
   wrench: <path d="M14.5 6.5a4 4 0 0 0-5.3 5L4 16.7a1.9 1.9 0 0 0 2.7 2.7l5.2-5.2a4 4 0 0 0 5-5.3l-2.4 2.4-2.1-.6-.6-2.1Z" />,
+  compass: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" />
+    </>
+  ),
+  chevronDown: <path d="m6 9 6 6 6-6" />,
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  copy: (
+    <>
+      <rect x="8.5" y="8.5" width="12" height="12" rx="2.5" />
+      <path d="M15.5 8.5V6a2.5 2.5 0 0 0-2.5-2.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5" />
+    </>
+  ),
   pin: (
     <>
       <path d="M12 21s6.5-5.6 6.5-11a6.5 6.5 0 0 0-13 0c0 5.4 6.5 11 6.5 11Z" />
@@ -106,7 +120,7 @@ const FILLED: Record<string, string> = {
 export type IconName =
   | 'stack' | 'grid' | 'cards' | 'terminal' | 'shuffle' | 'search' | 'sun' | 'moon' | 'close' | 'arrowUpRight'
   | 'arrowRight' | 'download' | 'mail' | 'file' | 'instagram' | 'glasses' | 'drum' | 'gamepad' | 'wrench' | 'pin'
-  | 'github' | 'linkedin'
+  | 'github' | 'linkedin' | 'compass' | 'chevronDown' | 'check' | 'copy'
 
 export function Icon({ name, size = 16, className }: { name: IconName; size?: number; className?: string }) {
   const filled = FILLED[name]

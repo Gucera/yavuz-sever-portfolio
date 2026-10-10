@@ -2,8 +2,9 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import { PROFILE, TABS, isProject } from './data'
 import { search } from './search'
 import type { ViewMode } from './layout'
+import type { Theme } from './hooks/useTheme'
+import { Icon } from './Icon'
 
-export type Theme = 'auto' | 'day' | 'night'
 
 type Props = {
   /** opens a tab full screen, the same as clicking it */
@@ -34,7 +35,7 @@ const COMMANDS: [string, string][] = [
   ['whoami', 'who built this'],
   ['contact', 'email and socials'],
   ['cv', 'download my CV'],
-  ['search <words>', 'search every tab (or ⌘K anywhere)'],
+  ['search <words>', 'search every tab'],
   ['view <stack|grid|cards>', 'switch to another view'],
   ['theme <day|night|auto>', 'switch the colour theme'],
   ['history', 'commands you typed'],
@@ -161,12 +162,16 @@ export function Terminal({ onOpen, onView, onTheme, onSearch, onCopyEmail }: Pro
       case 'whoami':
         return [out(`${PROFILE.name} · software developer · London. I build software that solves practical, operational problems.`)]
       case 'contact':
-        onCopyEmail()
         return [
           out(
             <span className="term__cat">
-              <span>
-                email <a href={`mailto:${PROFILE.email}`}>{PROFILE.email}</a> <em className="term__dim">(copied)</em>
+              <span className="term__actions">
+                <a className="term__btn term__btn--main" href={`mailto:${PROFILE.email}`}>
+                  <Icon name="mail" size={14} /> Email me
+                </a>
+                <button type="button" className="term__btn" onClick={onCopyEmail}>
+                  <Icon name="copy" size={14} /> Copy {PROFILE.email}
+                </button>
               </span>
               {PROFILE.socials.map(([label, url]) => (
                 <span key={label}>
@@ -244,8 +249,6 @@ export function Terminal({ onOpen, onView, onTheme, onSearch, onCopyEmail }: Pro
       case 'drums':
       case 'drum':
         return [out('🥁 ba-dum-tss')]
-      case 'konami':
-        return [out('↑ ↑ ↓ ↓ ← → ← → B A. Try it anywhere outside this prompt.')]
       case 'vim':
       case 'vi':
       case 'emacs':
@@ -339,9 +342,9 @@ export function Terminal({ onOpen, onView, onTheme, onSearch, onCopyEmail }: Pro
           />
         </label>
       </div>
-      {/* phones: one tap instead of typing */}
-      <div className="term__chips">
-        {['help', 'ls', 'cd projects', 'whoami', 'contact', 'clear'].map((c) => (
+      {/* one tap instead of typing */}
+      <div className="term__chips" aria-label="Quick commands">
+        {['help', 'ls', 'open about-me.md', 'cd projects', 'contact', 'cv', 'clear'].map((c) => (
           <button
             key={c}
             type="button"

@@ -24,7 +24,7 @@ export function EducationBody({ tab, active, meta, next }: Props) {
           {meta}
         </div>
         <div className="media media--3d edu__badge" data-reveal>
-          <UelBadge bg={tab.bg} face={tab.ink} side="#2a0f8f" rim="#c6ff3d" />
+          <UelBadge bg={tab.bg} face={tab.ink} side="#2a0f8f" rim="#c6ff3d" live={active} />
         </div>
       </div>
 

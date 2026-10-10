@@ -1,5 +1,5 @@
 import gsap from 'gsap'
-import { forwardRef, memo, useCallback, useRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
+import { forwardRef, memo, useCallback, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
 import type { Tab } from './data'
 import { EducationBody } from './Education'
 import { AboutBody } from './About'
@@ -11,12 +11,15 @@ import { DimarkBody } from './Dimark'
 import { CandyBody } from './Candy'
 import { CASE_STUDIES } from './data'
 import { Icon } from './Icon'
+import { FullContext } from './ProjectParts'
 
 type Props = {
   tab: Tab
   num: string
   style: CSSProperties
   isOpen: boolean
+  /** render the whole page (open, or being dealt); before that a closed tab is only a thumbnail */
+  full?: boolean
   animate: boolean
   hidden: boolean
   /** behind the front tab in the stack — only the tab bar reads */
@@ -50,7 +53,7 @@ type Props = {
 let touchDown = false
 
 export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
-  { tab, num, style, isOpen, animate, hidden, back, peek, project, pip, flingable, onFling, onLongPress, flipped, flipping, isNew, onTable, onHover, onOpen, onX, onNext },
+  { tab, num, style, isOpen, full = false, animate, hidden, back, peek, project, pip, flingable, onFling, onLongPress, flipped, flipping, isNew, onTable, onHover, onOpen, onX, onNext },
   ref,
 ) {
   const onKey = (e: KeyboardEvent) => {
@@ -182,6 +185,9 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
   const onNextRef = useRef(onNext)
   onNextRef.current = onNext
   const next = useCallback((e: MouseEvent) => onNextRef.current(e), [])
+  // once a tab has been opened its full page stays (it closes back into a thumbnail smoothly)
+  const [everFull, setEverFull] = useState(full)
+  if (full && !everFull) setEverFull(true)
 
   return (
     <div
@@ -270,7 +276,9 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
           <span className="card__num">{num}</span>
         </div>
 
-        <CardContent tab={tab} isOpen={isOpen} onNext={next} />
+        <FullContext.Provider value={everFull}>
+          <CardContent tab={tab} isOpen={isOpen} onNext={next} />
+        </FullContext.Provider>
       </article>
     </div>
   )

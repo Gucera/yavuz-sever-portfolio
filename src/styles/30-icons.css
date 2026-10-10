@@ -1,0 +1,58 @@
+/* ---------- icons ---------- */
+.icon {
+  flex: none;
+  display: inline-block;
+  vertical-align: -0.15em;
+}
+.card__x {
+  display: grid;
+  place-items: center;
+}
+.card__next {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.card__next .icon {
+  transition: translate 0.25s var(--ease);
+}
+.card__next:hover .icon {
+  translate: 4px 0;
+}
+.header__meta a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.shuffle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.incognito__icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(143, 143, 255, 0.14);
+  color: #b4b4ff;
+}
+.incognito__bar .icon {
+  color: #b4b4ff;
+}
+.dock__item {
+  color: #fff;
+}
+.dock__item--cv {
+  color: #111;
+}
+@media (max-width: 767px) {
+  .dock__item > .icon {
+    width: 20px;
+    height: 20px;
+  }
+  .shuffle {
+    padding: 0 9px;
+  }
+}

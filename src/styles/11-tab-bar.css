@@ -1,0 +1,111 @@
+/* ---------- tab bar label + calmer stack ---------- */
+
+.card__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.card__tab i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.card__url {
+  opacity: 0.55;
+}
+
+.card__num {
+  width: auto;
+}
+
+/* tabs behind the front one show only their bar + a clean colour band */
+.card__page > :not(.card__bar) {
+  transition: opacity 0.4s var(--ease);
+}
+
+.card--back .card__page > :not(.card__bar) {
+  /* not 0: fully transparent content is never painted, so the first stack -> grid flight
+     had to rasterise every hidden tab mid-air. 0.002 is invisible but keeps it painted. */
+  opacity: 0.002;
+}
+
+.card--back.card--peek .card__page > :not(.card__bar) {
+  opacity: 1;
+}
+
+@media (max-width: 767px) {
+  .card__url {
+    display: none;
+  }
+  .card__tab {
+    flex: 1;
+  }
+}
+
+.header__socials {
+  display: flex;
+  gap: 18px;
+}
+
+.header__socials a {
+  color: var(--muted);
+}
+
+.header__socials a:hover {
+  color: var(--hi);
+}
+
+@media (max-width: 767px) {
+  .header__meta {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .header__socials {
+    gap: 12px;
+  }
+}
+
+.header__name {
+  white-space: nowrap;
+}
+
+.header__meta {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.header__row {
+  display: flex;
+  gap: 28px;
+}
+
+@media (max-width: 767px) {
+  .header__name {
+    white-space: normal;
+  }
+  .header__meta {
+    align-items: flex-start;
+  }
+  .header__row {
+    gap: 16px;
+  }
+}
+
+/* the stack layer covers the stage; let clicks reach the header links */
+.stack {
+  pointer-events: none;
+}
+
+.stack .card {
+  pointer-events: auto;
+}

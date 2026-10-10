@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, type ReactNode } from 'react'
 import gsap from 'gsap'
 import { NISA, type Tab } from './data'
+import { Details, ProjectSummary } from './ProjectParts'
 
 type Props = {
   tab: Tab
@@ -103,6 +104,8 @@ export function NisaBody({ tab, active, meta, next }: Props) {
         </div>
       </div>
 
+      <ProjectSummary summary={NISA.summary} />
+
       <section className="panel" data-reveal>
         <span className="panel__label">01 · The problem</span>
         <div className="nisa__cols">
@@ -133,7 +136,8 @@ export function NisaBody({ tab, active, meta, next }: Props) {
         </section>
       </div>
 
-      <section className="panel" data-reveal>
+      <Details>
+      <section className="panel">
         <span className="panel__label">03 · Two workflows</span>
         {NISA.flows.map((flow, f) => (
           <div key={flow.label} className="cs__flow-row">
@@ -143,7 +147,7 @@ export function NisaBody({ tab, active, meta, next }: Props) {
         ))}
       </section>
 
-      <section className="panel" data-reveal>
+      <section className="panel">
         <span className="panel__label">04 · Technical architecture</span>
         <div className="arch">
           <div className="arch__node arch__node--op">
@@ -168,7 +172,7 @@ export function NisaBody({ tab, active, meta, next }: Props) {
         </div>
       </section>
 
-      <section className="panel" data-reveal>
+      <section className="panel">
         <span className="panel__label">05 · Core engineering principles</span>
         <ul className="cs__features nisa__principles">
           {NISA.principles.map(([title, text], i) => (
@@ -181,7 +185,7 @@ export function NisaBody({ tab, active, meta, next }: Props) {
         </ul>
       </section>
 
-      <div className="exp__bottom" data-reveal>
+      <div className="exp__bottom">
         <section className="panel">
           <span className="panel__label">06 · The hardest challenge</span>
           <p className="cs__quote">{NISA.challenge[0]}</p>
@@ -202,7 +206,7 @@ export function NisaBody({ tab, active, meta, next }: Props) {
         </section>
       </div>
 
-      <div className="exp__bottom" data-reveal>
+      <div className="exp__bottom">
         <section className="panel">
           <span className="panel__label">08 · Impact</span>
           <ul className="cs__impact">
@@ -220,6 +224,8 @@ export function NisaBody({ tab, active, meta, next }: Props) {
           ))}
         </section>
       </div>
+
+      </Details>
 
       {next}
     </div>

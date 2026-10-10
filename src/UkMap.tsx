@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { UKMAP, type Tab } from './data'
+import { Details, ProjectSummary } from './ProjectParts'
 
 type Props = {
   tab: Tab
@@ -159,8 +160,17 @@ function Box({ r, h, tone }: { r: Rect; h: number; tone: 'customer' | 'picked' }
 /** The map, drawn: a 2D analytic view that tilts into a 3D clay model when the tab opens. */
 function MapArt({ active }: { active: boolean }) {
   const [mode, setMode] = useState<'2d' | '3d' | 'uk' | 'street'>('2d')
+  const [demo, setDemo] = useState(false)
+  const toggleDemo = () => {
+    // closing the demo goes back to the plain 3D map
+    if (demo) setMode((m) => (m === 'uk' || m === 'street' ? '3d' : m))
+    setDemo(!demo)
+  }
   useEffect(() => {
-    if (!active) return setMode('2d')
+    if (!active) {
+      setDemo(false)
+      return setMode('2d')
+    }
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const t = window.setTimeout(() => setMode('3d'), 1100)
     return () => window.clearTimeout(t)
@@ -264,12 +274,20 @@ function MapArt({ active }: { active: boolean }) {
         <button type="button" className={mode === '3d' ? 'is-on' : undefined} onClick={() => setMode('3d')}>
           3D
         </button>
-        <button type="button" className={mode === 'uk' ? 'is-on' : undefined} onClick={() => setMode('uk')}>
-          Fit UK
+        {/* the extra views are a demo on request, not part of the default story */}
+        <button type="button" className={`ukmap__demo${demo ? ' is-on' : ''}`} aria-expanded={demo} onClick={toggleDemo}>
+          Demo
         </button>
-        <button type="button" className={mode === 'street' ? 'is-on' : undefined} onClick={() => setMode('street')}>
-          Street view
-        </button>
+        {demo && (
+          <>
+            <button type="button" className={mode === 'uk' ? 'is-on' : undefined} onClick={() => setMode('uk')}>
+              Fit UK
+            </button>
+            <button type="button" className={mode === 'street' ? 'is-on' : undefined} onClick={() => setMode('street')}>
+              Street view
+            </button>
+          </>
+        )}
       </div>
       <span className="ukmap__report" aria-hidden>
         ‹ Report
@@ -363,14 +381,7 @@ export function UkMapBody({ tab, active, meta, next }: Props) {
         </div>
       </div>
 
-      <ul className="ukm__stats" data-reveal>
-        {UKMAP.stats.map(([value, label]) => (
-          <li key={label}>
-            <strong>{value}</strong>
-            <span>{label}</span>
-          </li>
-        ))}
-      </ul>
+      <ProjectSummary summary={{ ...UKMAP.summary, stats: UKMAP.stats }} />
 
       <section className="panel" data-reveal>
         <span className="panel__label">01 · The problem</span>
@@ -391,7 +402,8 @@ export function UkMapBody({ tab, active, meta, next }: Props) {
         </ul>
       </section>
 
-      <section className="panel" data-reveal>
+      <Details>
+      <section className="panel">
         <span className="panel__label">02 · One map page, six capabilities</span>
         <ul className="cs__features">
           {UKMAP.features.map(([title, text], i) => (
@@ -404,7 +416,7 @@ export function UkMapBody({ tab, active, meta, next }: Props) {
         </ul>
       </section>
 
-      <div className="exp__bottom" data-reveal>
+      <div className="exp__bottom">
         <section className="panel">
           <span className="panel__label">03 · From messy address to one building</span>
           <ol className="ukm__steps">
@@ -449,13 +461,12 @@ export function UkMapBody({ tab, active, meta, next }: Props) {
             </span>
           </div>
           <p className="cs__text">
-            Building-level matches rose from 22% to 68% of customers, and postcode-only fell from 55% to 9%. Most of the old misses had
-            never really been searched: rate-limit errors were being saved as “not found”.
+            Most of the old misses had never really been searched: rate-limit errors were being saved as “not found”.
           </p>
         </section>
       </div>
 
-      <section className="panel" data-reveal>
+      <section className="panel">
         <span className="panel__label">04 · Painting one shop, not the whole terrace</span>
         <div className="ukm__slicing">
           <div className="ukm__slicing-text">
@@ -476,7 +487,7 @@ export function UkMapBody({ tab, active, meta, next }: Props) {
         </div>
       </section>
 
-      <div className="exp__bottom" data-reveal>
+      <div className="exp__bottom">
         <section className="panel">
           <span className="panel__label">05 · Every independent food shop that isn’t a customer</span>
           <p className="cs__text">
@@ -499,7 +510,7 @@ export function UkMapBody({ tab, active, meta, next }: Props) {
         </section>
       </div>
 
-      <section className="panel" data-reveal>
+      <section className="panel">
         <span className="panel__label">06 · Browser renders, backend resolves, database remembers</span>
         <div className="ukm__arch">
           {node('tiles', 'ukm__arch-tiles')}
@@ -514,7 +525,7 @@ export function UkMapBody({ tab, active, meta, next }: Props) {
         </div>
       </section>
 
-      <section className="panel" data-reveal>
+      <section className="panel">
         <span className="panel__label">07 · What broke, why, and how it was fixed</span>
         <div className="ukm__table">
           <div className="ukm__thead">
@@ -532,7 +543,7 @@ export function UkMapBody({ tab, active, meta, next }: Props) {
         </div>
       </section>
 
-      <div className="exp__bottom" data-reveal>
+      <div className="exp__bottom">
         <section className="panel">
           <span className="panel__label">08 · Large open datasets, loaded only where needed</span>
           <ul className="cs__impact">
@@ -550,6 +561,8 @@ export function UkMapBody({ tab, active, meta, next }: Props) {
           </ul>
         </section>
       </div>
+
+      </Details>
 
       <p className="ukm__privacy" data-reveal>
         {UKMAP.privacy} Contains OS data © Crown copyright · HM Land Registry data © Crown copyright · FSA data under the Open Government

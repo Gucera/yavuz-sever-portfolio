@@ -1,0 +1,237 @@
+/* ---------- case study ---------- */
+
+.cs__image {
+  min-height: 380px;
+  background: repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.06) 0 10px, transparent 10px 20px);
+}
+
+.cs__text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.cs__quote {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.2vw, 32px);
+  line-height: 1.08;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.cs__dark {
+  background: #111;
+  color: var(--bar);
+  border-color: #111;
+}
+
+.cs__dark .cs__quote {
+  color: var(--accent);
+}
+
+.cs__flow-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cs__flow-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.cs__flow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs__node {
+  height: 38px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+  border-radius: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.cs__flow--main .cs__node {
+  height: 46px;
+  font-size: 15px;
+  border-color: var(--accent);
+}
+
+.cs__flow--main .cs__node:last-child {
+  background: var(--accent);
+  color: #111;
+}
+
+.cs__arrow {
+  font-family: var(--font-mono);
+  color: var(--accent);
+}
+
+.cs__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cs__features li {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 10px;
+  background: color-mix(in srgb, #fff 18%, transparent);
+}
+
+.cs__features h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.cs__features p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cs__arch {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cs__arch li {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #111;
+  color: var(--bar);
+  font-size: 14px;
+}
+
+.cs__arch strong {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.cs__stats {
+  display: flex;
+  gap: 28px;
+}
+
+.cs__stats div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.cs__stats strong {
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 400;
+  line-height: 0.9;
+}
+
+.cs__stats span {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.cs__impact {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cs__impact li {
+  padding: 10px 0 10px 22px;
+  position: relative;
+  font-size: 15px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+}
+
+.cs__impact li:last-child {
+  border-bottom: none;
+}
+
+.cs__impact li::before {
+  content: '↗';
+  position: absolute;
+  left: 0;
+  font-family: var(--font-mono);
+}
+
+.cs__learned {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.55;
+  max-width: 980px;
+  text-wrap: pretty;
+}
+
+@media (max-width: 1023px) {
+  .cs__features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .cs__features {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cs__image {
+    min-height: 240px;
+  }
+  .cs__node {
+    white-space: normal;
+  }
+  .cs__arch li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+}
+
+.cs__image--art {
+  min-height: 480px;
+  border: none;
+  background: none;
+  overflow: hidden;
+  position: relative;
+  padding: 0;
+}
+
+.printer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.printer a:hover .printer__url {
+  text-decoration: underline;
+}

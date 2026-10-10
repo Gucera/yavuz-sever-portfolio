@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { ABOUT, type Tab } from './data'
+import { ABOUT, PROFILE, type Tab } from './data'
+import { Icon } from './Icon'
 
 type Props = {
   tab: Tab
@@ -66,6 +67,25 @@ export function AboutBody({ tab, meta, next }: Props) {
           <p className="cs__text">{ABOUT.closing}</p>
         </section>
       </div>
+
+      <section className="panel about__contact" data-reveal>
+        <span className="panel__label">Get in touch</span>
+        <p className="cs__quote">Have a role or a project in mind? Let’s talk.</p>
+        <div className="about__links">
+          <a className="about__link about__link--main" href={`mailto:${PROFILE.email}`}>
+            <Icon name="mail" size={18} />
+            {PROFILE.email}
+          </a>
+          <a className="about__link" href={PROFILE.socials[1][1]} target="_blank" rel="noreferrer">
+            <Icon name="linkedin" size={18} />
+            LinkedIn
+          </a>
+          <a className="about__link" href={PROFILE.cv} download>
+            <Icon name="download" size={18} />
+            Download CV
+          </a>
+        </div>
+      </section>
 
       {next}
     </div>

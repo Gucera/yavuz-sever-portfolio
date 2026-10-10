@@ -1,0 +1,165 @@
+/* ---------- education ---------- */
+
+.edu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 40px 32px 0;
+  max-width: 1376px;
+}
+
+.edu__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.edu__intro {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 28px;
+  padding-right: 16px;
+}
+
+.edu__badge {
+  min-height: 380px;
+}
+
+.edu__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.1fr) minmax(0, 1.1fr);
+  gap: 16px;
+}
+
+.edu .card__next {
+  margin-top: 16px;
+}
+
+.panel {
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  padding: 20px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.panel__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+.edu__highlight {
+  justify-content: space-between;
+  background: var(--accent);
+  color: #111;
+  border-color: var(--accent);
+}
+
+.edu__grade {
+  font-family: var(--font-display);
+  font-size: clamp(88px, 8vw, 128px);
+  line-height: 0.85;
+}
+
+.edu__honours {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.edu__honours strong {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.edu__marks,
+.edu__areas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.edu__marks {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.edu__mark-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.edu__mark-head span:last-child,
+.edu__area-num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.edu__bar {
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, currentColor 22%, transparent);
+  overflow: hidden;
+}
+
+.edu__bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width 1.2s var(--ease-out);
+}
+
+.edu__areas li {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  padding: 7px 0;
+  font-size: 14px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+}
+
+.edu__areas li:last-child {
+  border-bottom: none;
+}
+
+.edu__area-num {
+  opacity: 0.6;
+}
+
+@media (max-width: 1023px) {
+  .edu__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .edu__highlight {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .edu {
+    padding: 28px 16px 0;
+  }
+  .edu__top,
+  .edu__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .edu__intro {
+    padding-right: 0;
+  }
+  .edu__badge {
+    min-height: 260px;
+  }
+}

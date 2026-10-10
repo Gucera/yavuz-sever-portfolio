@@ -1,0 +1,35 @@
+/* ---------- header on tablets and small laptops: name on top, controls underneath ---------- */
+@media (min-width: 768px) and (max-width: 1439px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .header__meta {
+    align-items: flex-start;
+  }
+  .header__row {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    gap: 18px;
+  }
+  .header__count {
+    display: none;
+  }
+}
+/* any width: the header never pushes past the window */
+.header {
+  max-width: calc(100vw - 32px);
+}
+.header__meta {
+  min-width: 0;
+}
+
+/* wide screens: the tab's title row and its content share one centred column */
+.card__head,
+.card__body,
+.edu {
+  width: 100%;
+  max-width: 1376px;
+  margin-inline: auto;
+}

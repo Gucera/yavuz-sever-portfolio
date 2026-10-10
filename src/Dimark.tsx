@@ -1,5 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import gsap from 'gsap'
+import { Details, ProjectSummary } from './ProjectParts'
+import { Icon } from './Icon'
 import { DIMARK, type StoreStudy, type Tab } from './data'
 
 type Props = {
@@ -173,21 +175,15 @@ export function StoreStudyBody({ tab, study: d, theme, hero, meta, next }: Study
           </p>
           {meta}
           <a className="dmk__visit" href={d.site} target="_blank" rel="noreferrer" data-reveal>
-            Visit {host} ↗
+            Visit {host} <Icon name="arrowUpRight" size={14} />
           </a>
         </div>
         <div className="dmk__hero" data-reveal>
           {hero}
-          <div className="cs__stats">
-            {d.stats.map(([value, label]) => (
-              <div key={label}>
-                <strong>{value}</strong>
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
+
+      <ProjectSummary summary={d.summary} />
 
       <section className="panel" data-reveal>
         <span className="panel__label">01 · Context</span>
@@ -221,7 +217,8 @@ export function StoreStudyBody({ tab, study: d, theme, hero, meta, next }: Study
         </section>
       </div>
 
-      <div className="exp__bottom" data-reveal>
+      <Details>
+      <div className="exp__bottom">
         <section className="panel">
           <span className="panel__label">04 · Before</span>
           <ol className="ba ba--before">
@@ -240,7 +237,7 @@ export function StoreStudyBody({ tab, study: d, theme, hero, meta, next }: Study
         </section>
       </div>
 
-      <section className="panel" data-reveal>
+      <section className="panel">
         <span className="panel__label">05 · Key changes</span>
         <ul className="cs__features">
           {d.changes.map(([title, text], i) => (
@@ -253,7 +250,7 @@ export function StoreStudyBody({ tab, study: d, theme, hero, meta, next }: Study
         </ul>
       </section>
 
-      <div className="exp__bottom" data-reveal>
+      <div className="exp__bottom">
         <section className="panel">
           <span className="panel__label">06 · UX decisions</span>
           <ul className="cs__impact">
@@ -272,7 +269,7 @@ export function StoreStudyBody({ tab, study: d, theme, hero, meta, next }: Study
         </section>
       </div>
 
-      <div className="exp__bottom" data-reveal>
+      <div className="exp__bottom">
         <section className="panel cs__dark">
           <span className="panel__label">08 · Challenges</span>
           {d.challenges.map(([title, text]) => (
@@ -293,7 +290,7 @@ export function StoreStudyBody({ tab, study: d, theme, hero, meta, next }: Study
         </section>
       </div>
 
-      <section className="panel" data-reveal>
+      <section className="panel">
         <span className="panel__label">10 · Learnings</span>
         <div className="nisa__cols">
           {d.learned.map((p) => (
@@ -303,6 +300,8 @@ export function StoreStudyBody({ tab, study: d, theme, hero, meta, next }: Study
           ))}
         </div>
       </section>
+
+      </Details>
 
       {next}
     </div>

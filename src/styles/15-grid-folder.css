@@ -1,0 +1,193 @@
+/* ---------- iOS-style projects folder (grid view) ---------- */
+
+.folder {
+  position: absolute;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(26px) saturate(1.7);
+  -webkit-backdrop-filter: blur(26px) saturate(1.7);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 18px 40px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition:
+    top 0.7s var(--ease-out),
+    left 0.7s var(--ease-out),
+    width 0.7s var(--ease-out),
+    height 0.7s var(--ease-out),
+    border-radius 0.7s var(--ease-out),
+    background 0.5s var(--ease),
+    opacity 0.3s var(--ease);
+  animation: folder-in 0.5s var(--ease) 0.55s both;
+}
+
+@keyframes folder-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+.folder:hover:not(.is-open) {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.folder.is-open {
+  border-radius: 36px;
+  background: rgba(46, 46, 52, 0.55);
+  cursor: default;
+}
+
+.folder.is-flying {
+  transition: none;
+}
+
+.folder.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.folder__title {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 34px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.25s var(--ease);
+  pointer-events: none;
+}
+
+.folder.is-open .folder__title {
+  opacity: 1;
+  transition-delay: 0.25s;
+}
+
+.folder__chip i {
+  background: linear-gradient(135deg, #ff4d1a, #c6ff3d 40%, #13235b 70%, #ff4fa3);
+}
+
+/* the folder's own label shows while it is closed in the landed grid */
+.stage--grid:not(.stage--flying) .folder:not(.is-open) .folder__chip {
+  opacity: 1;
+  transform: none;
+}
+
+/* blurred backdrop behind the open folder (iOS dims the home screen) */
+.folder-backdrop {
+  position: absolute;
+  inset: 0;
+  /* a flat dim instead of a full-screen backdrop blur, which re-blurs every frame while the
+     tiles behind it move */
+  background: rgba(8, 8, 10, 0.72);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s var(--ease);
+}
+
+.folder-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* projects inside the closed folder: no labels, and the whole mini card opens the folder */
+.stage--grid .card--project .card__chip {
+  opacity: 0 !important;
+}
+
+.stage--grid.stage--folder-open .card--project[role='button'] .card__chip {
+  opacity: 1 !important;
+  transform: none;
+}
+
+/* projects in the closed folder are just thumbnails, unless one was opened directly
+   (Spotlight or a /project link) */
+.stage--grid:not(.stage--folder-open) .card--project:not([role='dialog']) .card__page {
+  pointer-events: none;
+}
+
+/* keep the cookie banner above an open tab */
+.consent {
+  z-index: 500;
+}
+
+@media (max-width: 767px) {
+  .folder {
+    border-radius: 18px;
+  }
+  .folder.is-open {
+    border-radius: 26px;
+  }
+  .folder__title {
+    top: 12px;
+    font-size: 26px;
+  }
+}
+
+/* ---------- grid: full-size tab bar on each card ---------- */
+
+/* the grid label becomes a real-size tab bar across the top of the card (the page's own bar
+   is scaled down to an unreadable sliver and sits underneath it) */
+.card__chip:not(.folder__chip) {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: auto;
+  max-width: none;
+  height: 34px;
+  padding: 0 14px;
+  gap: 10px;
+  border-radius: 0;
+  background: var(--bar);
+  color: #1a1a1a;
+  font-size: 14px;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+}
+
+.card__chip:not(.folder__chip) i {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.card__chip:not(.folder__chip) em {
+  margin-left: auto;
+  opacity: 0.55;
+}
+
+@media (max-width: 767px) {
+  .card__chip:not(.folder__chip) {
+    height: 26px;
+    padding: 0 9px;
+    gap: 6px;
+    font-size: 11px;
+  }
+  .card__chip:not(.folder__chip) em {
+    display: inline;
+  }
+}
+
+/* phones: backdrop blur is expensive to composite, so use flat translucent fills instead */
+@media (hover: none), (max-width: 767px) {
+  .folder,
+  .folder-backdrop,
+  .card__chip {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .folder {
+    background: rgba(70, 70, 76, 0.55);
+  }
+  .folder.is-open {
+    background: rgba(46, 46, 52, 0.92);
+  }
+  .folder-backdrop {
+    background: rgba(8, 8, 10, 0.78);
+  }
+}

@@ -1,0 +1,108 @@
+/* ---- grid: dock ---- */
+.dock {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  translate: -50% 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 18px 40px rgba(0, 0, 0, 0.45);
+  animation: dock-in 0.5s var(--ease-out) 0.4s both;
+}
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    translate: -50% 30px;
+  }
+}
+.dock__item {
+  --m: 0;
+  position: relative;
+  width: calc(52px * (1 + 0.75 * var(--m)));
+  height: calc(52px * (1 + 0.75 * var(--m)));
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: calc(14px * (1 + 0.75 * var(--m)));
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  will-change: width, height;
+}
+.dock__item > .icon {
+  scale: calc(1 + 0.75 * var(--m));
+}
+/* the name floats above the icon, like the Mac dock */
+.dock__item::before {
+  content: attr(aria-label);
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  translate: -50% 4px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: rgba(30, 30, 34, 0.92);
+  color: #f4f4f6;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.15s var(--ease),
+    translate 0.15s var(--ease);
+}
+.dock__item--gh {
+  background: #24292f;
+}
+.dock__item--in {
+  background: #0a66c2;
+}
+.dock__item--ig {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
+}
+.dock__item--mail {
+  background: linear-gradient(#5ac8fa, #1a7cf5);
+  font-size: 22px;
+}
+.dock__item--cv {
+  background: var(--accent);
+  color: #111;
+}
+.dock__item--search {
+  background: #3a3a40;
+  font-size: 24px;
+}
+@media (hover: hover) {
+  .dock__item:hover::before {
+    opacity: 1;
+    translate: -50% 0;
+  }
+}
+@media (max-width: 767px) {
+  .dock {
+    gap: 8px;
+    padding: 8px 10px;
+    bottom: 12px;
+    border-radius: 20px;
+  }
+  .dock__item {
+    --m: 0 !important;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    font-size: 14px;
+  }
+}

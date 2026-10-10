@@ -1,0 +1,121 @@
+/* ---------- responsive pass ---------- */
+
+/* tablets and small laptops: single-column sections */
+@media (max-width: 1023px) {
+  .edu__top,
+  .exp__bottom,
+  .nisa__cols,
+  .about__how {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .edu__intro {
+    padding-right: 0;
+  }
+  .card__head {
+    flex-wrap: wrap;
+    gap: 8px 24px;
+  }
+  .card__title {
+    font-size: clamp(56px, 9vw, 96px);
+  }
+  .card__tags {
+    white-space: normal;
+    flex-wrap: wrap;
+    padding-top: 0;
+    align-self: center;
+  }
+  .cs__features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .edu__badge,
+  .exp__photo,
+  .cs__image--art {
+    min-height: 340px;
+  }
+  .about__photo {
+    aspect-ratio: 1;
+    min-height: 0;
+  }
+  /* storefront mockup: keep the basket on screen */
+  .store__nav span:nth-of-type(n + 3):not(.store__cart) {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .cs__features,
+  .nisa__principles,
+  .exp__focus {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .card__tags {
+    align-self: flex-start;
+  }
+  .cs__stats strong {
+    font-size: 44px;
+  }
+  .cs__quote {
+    font-size: 24px;
+  }
+  .exp__headline {
+    font-size: 32px;
+  }
+  .card__bar {
+    height: 38px;
+  }
+}
+
+@media (max-width: 420px) {
+  .store__nav span:nth-of-type(2) {
+    display: none;
+  }
+  .store__grid {
+    gap: 8px;
+    padding: 10px;
+  }
+  .cc__phone {
+    width: 250px;
+    height: 510px;
+  }
+  .header__socials {
+    gap: 10px;
+  }
+}
+
+/* short screens: landscape phones, small laptop windows */
+@media (max-height: 619px) {
+  .header {
+    top: 18px;
+  }
+  .header__name {
+    font-size: 40px;
+    white-space: nowrap;
+  }
+  .header__role {
+    display: none;
+  }
+  .header__meta {
+    gap: 4px;
+  }
+  .header__id {
+    gap: 0;
+  }
+}
+
+@media (max-height: 619px) and (max-width: 767px) {
+  .header {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+  .header__name {
+    font-size: 30px;
+  }
+}
+
+/* touch: no scrolling/callouts on stacked tabs so a finger can slide across them */
+.stack .card[role='button'] {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

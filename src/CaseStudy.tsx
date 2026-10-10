@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from 'react'
 import type { CaseStudy, Tab } from './data'
 import { LabelPrinter } from './LabelPrinter'
+import { Details, ProjectSummary } from './ProjectParts'
 
 type Props = {
   tab: Tab
@@ -41,6 +42,8 @@ export function CaseStudyBody({ tab, study, active, meta, next }: Props) {
         )}
       </div>
 
+      <ProjectSummary summary={study.summary} />
+
       <div className="exp__bottom" data-reveal>
         <section className="panel">
           <span className="panel__label">01 · The problem</span>
@@ -60,7 +63,8 @@ export function CaseStudyBody({ tab, study, active, meta, next }: Props) {
         </section>
       </div>
 
-      <section className="panel cs__dark" data-reveal>
+      <Details>
+      <section className="panel cs__dark">
         <span className="panel__label">03 · Core workflow</span>
         {study.flows.map((flow, f) => (
           <div key={flow.label} className="cs__flow-row">
@@ -81,7 +85,7 @@ export function CaseStudyBody({ tab, study, active, meta, next }: Props) {
         ))}
       </section>
 
-      <section className="panel" data-reveal>
+      <section className="panel">
         <span className="panel__label">04 · Key features</span>
         <ul className="cs__features">
           {study.features.map(([title, text], i) => (
@@ -94,7 +98,7 @@ export function CaseStudyBody({ tab, study, active, meta, next }: Props) {
         </ul>
       </section>
 
-      <div className="exp__bottom" data-reveal>
+      <div className="exp__bottom">
         <section className="panel cs__dark">
           <span className="panel__label">05 · Engineering challenge</span>
           <p className="cs__quote">{study.challenge[0]}</p>
@@ -115,7 +119,7 @@ export function CaseStudyBody({ tab, study, active, meta, next }: Props) {
         </section>
       </div>
 
-      <div className="exp__bottom" data-reveal>
+      <div className="exp__bottom">
         <section className="panel">
           <span className="panel__label">07 · Architecture</span>
           <ol className="cs__arch">
@@ -129,16 +133,6 @@ export function CaseStudyBody({ tab, study, active, meta, next }: Props) {
         </section>
         <section className="panel">
           <span className="panel__label">08 · Impact</span>
-          {study.stats && (
-            <div className="cs__stats">
-              {study.stats.map(([value, label]) => (
-                <div key={label}>
-                  <strong>{value}</strong>
-                  <span>{label}</span>
-                </div>
-              ))}
-            </div>
-          )}
           <ul className="cs__impact">
             {study.impact.map((item) => (
               <li key={item}>{item}</li>
@@ -147,10 +141,11 @@ export function CaseStudyBody({ tab, study, active, meta, next }: Props) {
         </section>
       </div>
 
-      <section className="panel" data-reveal>
+      <section className="panel">
         <span className="panel__label">09 · What I learned</span>
         <p className="cs__learned">{study.learned}</p>
       </section>
+      </Details>
 
       {next}
     </div>

@@ -1,3 +1,5 @@
+import type { Summary } from './ProjectParts'
+
 export type Tab = {
   /** Big title on the card */
   title: string
@@ -231,6 +233,7 @@ export const EXPERIENCE = {
 
 export type CaseStudy = {
   subtitle: string
+  summary: Summary
   /** Repository link printed on the illustrated label (without https://) */
   repo?: string
   problem: string[]
@@ -241,7 +244,6 @@ export type CaseStudy = {
   challenge: string[]
   safety: string[]
   architecture: [layer: string, text: string][]
-  stats?: [value: string, label: string][]
   impact: string[]
   learned: string
 }
@@ -249,6 +251,15 @@ export type CaseStudy = {
 export const CASE_STUDIES: Record<string, CaseStudy> = {
   'Quick Label': {
     subtitle: 'Warehouse Labelling & Product Tracking System',
+    summary: {
+      problem: 'Labelling was manual: staff worked out which orders needed labels, found the right label and quantity by hand, and sent it to the right printer.',
+      built: 'A system that detects orders needing labels, matches them to label definitions, calculates quantities and prints them in one controlled run, with uncertain cases flagged for review. A phone barcode scan can print a label too.',
+      result: 'Order-driven, reviewable label printing for the whole catalogue instead of product-by-product preparation.',
+      stats: [
+        ['848', 'products'],
+        ['106', 'brands'],
+      ],
+    },
     repo: 'github.com/Gucera/Quick-Label',
     problem: [
       'Product labelling was a repetitive and error-prone warehouse process. Staff had to identify which orders required labels, find the correct product labels, calculate quantities manually and send them to the right printer.',
@@ -292,10 +303,6 @@ export const CASE_STUDIES: Record<string, CaseStudy> = {
       ['Data layer', 'PostgreSQL mirror of operational data'],
       ['Printing', 'Short-lived Windows print agent communicates with the thermal printer'],
     ],
-    stats: [
-      ['848', 'products'],
-      ['106', 'brands'],
-    ],
     impact: [
       'Supports a large internal product-label catalogue',
       'Reduced manual product-by-product label preparation',
@@ -310,6 +317,15 @@ export const CASE_STUDIES: Record<string, CaseStudy> = {
 
 export const NISA = {
   subtitle: 'Wholesale Order & Invoice Automation',
+  summary: {
+    problem: 'Orders from a supplier portal with no API were copied, reshaped and retyped by hand, then every invoice was corrected line by line.',
+    built: 'A browser-automation system that reads and validates each order, creates a verified internal order and reconciles the invoice, with an operator approving every committing step.',
+    result: 'Far less manual order entry, validated orders with duplicate protection, and invoice submission kept in human hands.',
+    stats: [
+      ['50+', 'lines per order, no longer retyped'],
+      ['0', 'committing steps without operator approval'],
+    ],
+  } as Summary,
   demoRepo: 'github.com/Gucera/retail-order-automation',
   runLog: [
     ['run', '3 orders selected by operator'],
@@ -391,11 +407,16 @@ export const NISA = {
 
 export const DIMARK = {
   subtitle: 'Redesigning a high-volume B2B ecommerce experience',
+  summary: {
+    problem: 'A catalogue of thousands of products behind a long, flat navigation, a cluttered homepage and product cards that were hard to scan for trade buyers.',
+    built: 'A Shopify redesign: a clearer category and brand hierarchy, consistent product cards with pack and unit pricing, stronger merchandising and a more useful trade account.',
+    result: 'A shorter path from discovery to add-to-order, for both browsing and repeat buyers.',
+    stats: [
+      ['2,000+', 'products'],
+      ['850+', 'brands'],
+    ],
+  } as Summary,
   site: 'https://dimarkltd.co.uk',
-  stats: [
-    ['2,000+', 'products'],
-    ['850+', 'brands'],
-  ] as [string, string][],
   context:
     'Dimark’s catalogue spans thousands of products across international food, drinks, confectionery, household supplies, chilled goods and specialist brands. The site had to serve two very different customer behaviours.',
   behaviours: [
@@ -462,7 +483,7 @@ export const DIMARK = {
     'Responsive catalogue & account',
   ],
   challenges: [
-    ['Scale vs. usability', 'Presenting 2,000+ products and 850+ brands without overwhelming customers meant prioritising, not exposing every destination at once.'],
+    ['Scale vs. usability', 'Presenting the whole catalogue without overwhelming customers meant prioritising, not exposing every destination at once.'],
     ['Two shopping modes', 'Exploratory shopping and repeat wholesale ordering need different entry points but share the same pricing and stock data.'],
     ['Product-data completeness', 'Ingredients, nutrition, delivery rules and unit pricing only help when they are populated consistently and kept up to date.'],
   ] as [string, string][],
@@ -488,10 +509,15 @@ export type StoreStudy = typeof DIMARK
 export const CANDY: StoreStudy = {
   subtitle: 'Restructuring a wholesale confectionery store for faster product discovery',
   site: 'https://candycargo.co.uk',
-  stats: [
-    ['503 → 337', 'products in Candy & Chocolate'],
-    ['8', 'clear departments'],
-  ],
+  summary: {
+    problem: 'Broad categories with very long dropdowns, generic homepage carousels and product pages missing what wholesale buyers need to decide.',
+    built: 'A restructured Shopify store: clear departments, format-led sub-collections, intent-led merchandising and a Quick Facts block on every product page.',
+    result: 'Faster discovery for repeat orders and trend-led browsing alike, with stock and pack information visible before login.',
+    stats: [
+      ['503 → 337', 'products in Candy & Chocolate'],
+      ['8', 'clear departments'],
+    ],
+  },
   context:
     'Candy Cargo supplies international confectionery, snacks, drinks and trending imported brands to convenience stores, supermarkets and independent retailers. Trends, flavours, pack formats and availability change constantly, so the store had to support two ways of buying.',
   behaviours: [
@@ -499,7 +525,7 @@ export const CANDY: StoreStudy = {
     ['Trend-led discovery', 'Buyers browsing for new products that could perform well on their shelves.'],
   ],
   problem: [
-    'Navigation relied on broad categories with very long dropdowns mixing brands, formats and product types. Candy & Chocolate alone held 503 products.',
+    'Navigation relied on broad categories with very long dropdowns mixing brands, formats and product types. Candy & Chocolate alone held hundreds of products.',
     'The homepage used generic featured carousels that didn’t separate new arrivals, proven sellers and promotions. Product pages had useful data, but VAT, pallet size, barcodes, returns and delivery rules weren’t brought together for B2B buyers — and with prices restricted to registered customers, discovery had to stay useful without them.',
   ],
   goals: [
@@ -515,13 +541,13 @@ export const CANDY: StoreStudy = {
   before: [
     'Candy & Chocolate, Drinks, Snacks Foods, Grocery… plus a generic “More Links”',
     'Dropdowns mixing categories with long brand directories',
-    '503 products in one broad Candy & Chocolate collection',
+    'One broad Candy & Chocolate collection for everything',
     'Homepage built on generic Featured Products carousels',
     'Linear product pages without a B2B summary',
   ],
   after: [
-    '8 consistent departments, from Grocery & Pantry to Vending Machine',
-    'Candy & Chocolate narrowed to 337, with format-led sub-destinations',
+    'Consistent departments, from Grocery & Pantry to Vending Machine',
+    'Candy & Chocolate narrowed down, with format-led sub-destinations',
     'New Products, New Tastes for Your Shelves, Best Sellers and Offers',
     'New, Sold Out and Back in Stock Soon states on every card',
     'A Quick Facts block with VAT, pallet, barcodes and returns',
@@ -621,6 +647,11 @@ export const INCOGNITO = {
  */
 export const UKMAP = {
   subtitle: 'Customer & Prospect Map',
+  summary: {
+    problem: 'Thousands of customers existed only as messy free-text addresses, so sales had no picture of where customers were or which nearby shops weren’t buying yet.',
+    built: 'A 2D/3D map inside the internal portal: a geocoding pipeline that places shops on their exact building, a layer of independent prospect shops, and region and sales-rep reports exported to Excel.',
+    result: 'Most customers now sit on their own building, lookups take seconds, and it all runs on free, open UK data.',
+  } as Summary,
   stats: [
     ['22% → 68%', 'of customer shops placed on their exact building'],
     ['94%', 'of building-level shops matched to a Land Registry parcel'],

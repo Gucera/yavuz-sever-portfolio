@@ -1,0 +1,80 @@
+/* ---------- stage + header ---------- */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  /* clip, unlike hidden, can't be scrolled by focus or scrollIntoView, so the header never
+     slides off when something inside takes focus */
+  overflow: clip;
+  background: var(--bg);
+  transition: background-color 0.5s var(--ease);
+}
+
+.header {
+  position: absolute;
+  top: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.header__id {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.header__name {
+  font-family: var(--font-display);
+  font-size: clamp(44px, 5vw, 72px);
+  line-height: 0.9;
+  color: var(--hi);
+  transition: color 0.5s var(--ease);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  margin: 0;
+  font-weight: 400;
+}
+
+.word {
+  display: inline-block;
+  white-space: nowrap;
+  margin-right: 0.22em;
+}
+
+.word:last-child {
+  margin-right: 0;
+}
+
+.ch-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+}
+
+.ch {
+  display: inline-block;
+}
+
+.header__role,
+.header__meta {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.header__meta {
+  display: flex;
+  gap: 28px;
+}
+
+.header__meta a {
+  color: var(--hi);
+  text-decoration: none;
+}
+
+.header__meta a:hover {
+  text-decoration: underline;
+}

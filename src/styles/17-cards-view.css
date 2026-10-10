@@ -1,0 +1,200 @@
+/* ---------- cards view: a hand of playing cards over a card table ---------- */
+
+.stage--cards {
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 108%, rgba(36, 92, 62, 0.55), transparent 70%),
+    var(--bg);
+}
+
+/* cream playing-card border drawn over the face */
+.stage--cards .card[role='button'] {
+  outline: 4px solid #f3efe4;
+  outline-offset: -4px;
+}
+
+/* labels stay on the cards through view changes (no blink); they leave only when a card is dealt */
+.stage--cards:not(.stage--dealing) .card[role='button'] .card__chip {
+  opacity: 1;
+  transform: none;
+}
+
+/* while a card is dealt, the rest of the hand drops away */
+.stage--dealing .card:not([data-dealt]) {
+  opacity: 0 !important;
+  translate: 0 140px;
+  /* the rest of the hand follows after the chosen card has left, not before */
+  transition:
+    opacity 0.55s var(--ease) 0.18s,
+    translate 0.7s var(--ease) 0.12s;
+}
+
+.stage--dealing .card[data-dealt] {
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6) !important;
+}
+
+.stage--dealing .header {
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+}
+
+@media (max-width: 767px) {
+  .stage--cards .card[role='button'] {
+    outline-width: 3px;
+    outline-offset: -3px;
+  }
+}
+
+/* the card table lives inside the stack, so it zooms with the camera when a card is dealt */
+.table {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 55% 45% at 50% 64%, #24563c 0%, #173a28 45%, #0e1f16 70%, var(--bg) 92%);
+  animation: table-in 0.6s var(--ease) both;
+  /* its own layer: the noise texture is painted once, never again when cards move over it */
+  will-change: transform;
+}
+
+@keyframes table-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* as the camera closes in, the playing-card border and corners give way to the page */
+.card[data-camera] {
+  outline-color: transparent !important;
+  transition: outline-color 0.45s var(--ease) !important;
+}
+
+/* ---------- cards view: corner indices and the king easter egg ---------- */
+
+.card__pip {
+  position: absolute;
+  z-index: 6;
+  top: 40px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 30px;
+  padding: 5px 5px 4px;
+  border-radius: 6px;
+  background: #f3efe4;
+  color: #111;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+  pointer-events: none;
+}
+
+.card__pip i {
+  font-style: normal;
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+.card__pip.is-red {
+  color: #c8102e;
+}
+
+.card__pip--br {
+  top: auto;
+  left: auto;
+  right: 8px;
+  bottom: 8px;
+  transform: rotate(180deg);
+}
+
+.stage--cards .card[role='button']:not([data-camera]) .card__pip {
+  opacity: 1;
+}
+
+.about__photo {
+  position: relative;
+}
+
+.about__king {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f4f1e8;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease);
+  pointer-events: none;
+}
+
+.stage--cards .card[role='button'] .about__king {
+  opacity: 1;
+}
+
+/* as the camera comes down on the About card, the king gives way to the real portrait */
+.stage--cards .card[data-camera] .about__king {
+  opacity: 0;
+}
+
+@media (max-width: 767px) {
+  .card__pip {
+    top: 30px;
+    left: 5px;
+    min-width: 20px;
+    padding: 3px 3px 2px;
+    font-size: 13px;
+    border-radius: 4px;
+  }
+  .card__pip i {
+    font-size: 12px;
+  }
+  .card__pip--br {
+    top: auto;
+    left: auto;
+    right: 5px;
+    bottom: 5px;
+  }
+}
+
+/* cards view: leftward cards (About me first) overlap rightward ones once the hand has landed */
+.stage--cards:not(.stage--flying):not(.stage--dealing) .card[role='button'] {
+  z-index: var(--hz) !important;
+}
+
+/* the top-left card index lives in the tab bar, in place of the colour dot */
+.card__chip-pip {
+  flex-shrink: 0;
+  min-width: 30px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: #fff;
+  color: #111;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+.card__chip-pip.is-red {
+  color: #c8102e;
+}
+
+@media (max-width: 767px) {
+  .card__chip-pip {
+    min-width: 22px;
+    padding: 1px 4px;
+    font-size: 11px;
+    border-radius: 4px;
+  }
+}
+
+
+/* ================= view features ================= */

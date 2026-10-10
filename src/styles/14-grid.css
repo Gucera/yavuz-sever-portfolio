@@ -1,0 +1,125 @@
+/* ---------- grid view ---------- */
+
+.view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(198, 255, 61, 0.5);
+  background: transparent;
+  color: var(--hi);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.view-toggle:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.view-toggle span {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.header__row {
+  align-items: center;
+}
+
+
+.header__row > * {
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .header__row {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .header__row > a[href^='mailto'] {
+    flex-basis: 100%;
+  }
+}
+
+/* while cards fly between views, isolate each card so moving one doesn't re-lay-out the rest */
+.stage--flying .card {
+  contain: layout paint style;
+}
+/* big soft shadows are re-rendered every frame a card moves or resizes; while cards are in
+   motion they get a small one (the eye can't tell mid-flight) */
+.stage--flying .card,
+.stage--dealing .card,
+.stage--shuffling .card[role='button'] {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.42) !important;
+}
+
+/* right after landing in the stack, hide back-of-stack content at once (it's covered anyway)
+   instead of fading six tabs on the landing frame */
+.stage--landing .card__page > :not(.card__bar) {
+  transition: none;
+}
+
+/* ---------- grid labels ---------- */
+
+.card__chip {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: calc(100% - 24px);
+  padding: 8px 14px 8px 11px;
+  border-radius: 20px;
+  background: rgba(12, 12, 13, 0.86);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #f2f2f2;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+  pointer-events: none;
+}
+
+.card__chip i {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.7);
+}
+
+.card__chip em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+/* only in the grid, once the cards have landed */
+.stage--grid .card[role='button'] .card__chip {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 767px) {
+  .card__chip {
+    left: 8px;
+    bottom: 8px;
+    gap: 6px;
+    padding: 5px 10px 5px 8px;
+    font-size: 11px;
+  }
+  .card__chip em {
+    display: none;
+  }
+}

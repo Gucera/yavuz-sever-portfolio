@@ -1,0 +1,151 @@
+/* ---------- experience ---------- */
+
+.exp__headline {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 3.6vw, 56px);
+  line-height: 1;
+  text-transform: uppercase;
+  margin: 0;
+  font-weight: 400;
+  text-wrap: balance;
+}
+
+.exp__story {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.exp__story p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.exp__photo {
+  min-height: 380px;
+  border: none;
+  background: none;
+}
+
+.exp__focus {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+}
+
+.exp__focus li {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 18px 0;
+  border-left: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+}
+
+.exp__focus li:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+
+.exp__focus h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.exp__focus p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+.exp__num {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: #111;
+  color: var(--accent);
+}
+
+.exp__bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.exp__stack {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.exp__stack li {
+  height: 34px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  background: #111;
+  color: var(--bar);
+  border: 1px solid #111;
+  border-radius: 17px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.exp__spans,
+.exp__work p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.exp__work {
+  background: #111;
+  color: var(--bar);
+  border-color: #111;
+}
+
+.exp__work p:last-child {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+
+@media (max-width: 1023px) {
+  .exp__focus {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 20px;
+  }
+  .exp__focus li,
+  .exp__focus li:first-child {
+    border-left: none;
+    padding: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .exp__focus,
+  .exp__bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .exp__photo {
+    min-height: 240px;
+  }
+}
+
+.exp__logo {
+  width: min(88%, 520px);
+  height: auto;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.16));
+}

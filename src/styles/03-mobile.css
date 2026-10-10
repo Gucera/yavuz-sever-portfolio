@@ -1,0 +1,44 @@
+/* ---------- mobile ---------- */
+
+@media (max-width: 767px) {
+  .header {
+    top: 40px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .header__name {
+    font-size: 44px;
+  }
+  .header__meta {
+    gap: 16px;
+    font-size: 12px;
+  }
+  .card__head {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 16px 0;
+  }
+  .card__title {
+    font-size: 56px;
+  }
+  .card__tags {
+    padding-top: 0;
+  }
+  .card__body {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 28px 16px 0;
+  }
+  .media--hero {
+    height: 260px;
+  }
+  .media--detail {
+    height: 160px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card--anim {
+    transition-duration: 0.01s;
+  }
+}
