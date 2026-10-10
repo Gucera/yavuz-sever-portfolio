@@ -3552,10 +3552,105 @@ a {
   inset: -4%;
   transform-style: preserve-3d;
   transform-origin: 50% 58%;
-  transition: transform 1.5s cubic-bezier(0.65, 0, 0.2, 1);
 }
 .ukmap--3d .ukmap__plane {
   transform: rotateX(54deg) rotateZ(-17deg) scale(1.3);
+}
+/* street view: the camera drops to eye height on the high street and walks up it */
+.ukmap--street .ukmap__plane {
+  transform-origin: 52% 92%;
+  transform: translate(-2%, 12%) rotateX(78deg) scale(2.6);
+  animation: ukmap-walk 14s linear 1.6s forwards;
+}
+@keyframes ukmap-walk {
+  from {
+    transform: translate(-2%, 12%) rotateX(78deg) scale(2.6);
+  }
+  to {
+    transform: translate(-2%, 12%) rotateX(78deg) scale(2.6) translateY(34%);
+  }
+}
+.ukmap__sky {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 46%;
+  background: linear-gradient(#cfe0ea, #e9e9e2 70%, rgba(236, 230, 218, 0));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s 0.5s var(--ease);
+}
+.ukmap--street .ukmap__sky {
+  opacity: 1;
+}
+.ukmap--street .ukmap__view {
+  background: #cfe0ea;
+}
+/* fit UK: the neighbourhood shrinks away and the country comes in */
+.ukmap--uk .ukmap__plane {
+  transform: scale(0.06);
+  opacity: 0;
+}
+.ukmap__plane {
+  transition:
+    transform 1.5s cubic-bezier(0.65, 0, 0.2, 1),
+    transform-origin 1.5s cubic-bezier(0.65, 0, 0.2, 1),
+    opacity 0.7s var(--ease);
+}
+.ukmap__uk {
+  position: absolute;
+  inset: 8% 0 4%;
+  width: 100%;
+  height: 88%;
+  opacity: 0;
+  transform: scale(2.4);
+  pointer-events: none;
+  transition:
+    transform 1.5s cubic-bezier(0.65, 0, 0.2, 1),
+    opacity 0.8s var(--ease);
+}
+.ukmap--uk .ukmap__uk {
+  opacity: 1;
+  transform: none;
+}
+.ukmap__uk-land {
+  fill: #fbfaf7;
+  stroke: #cbbca5;
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.ukmap__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  translate: -50% 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(35, 33, 43, 0.82);
+  color: #fbfaf7;
+  font: 500 11px var(--font-body);
+  width: max-content;
+  max-width: 90%;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.4s var(--ease),
+    translate 0.4s var(--ease);
+}
+.ukmap--uk .ukmap__hint,
+.ukmap--street .ukmap__hint {
+  opacity: 1;
+  translate: -50% 0;
+}
+.ukmap--uk .ukmap__legend,
+.ukmap--street .ukmap__legend,
+.ukmap--uk .ukmap__scale,
+.ukmap--street .ukmap__scale {
+  opacity: 0;
+}
+.ukmap__legend,
+.ukmap__scale {
+  transition: opacity 0.4s var(--ease);
 }
 .ukmap__plane svg {
   position: absolute;
@@ -3666,19 +3761,20 @@ a {
   transform: rotateY(90deg) scaleX(0);
   background: #8877cc;
 }
-.ukmap--2d .ukmap__face--top {
+.ukmap--2d .ukmap__face--top,
+.ukmap--uk .ukmap__face--top {
   opacity: 0;
 }
-.ukmap--3d .ukmap__face--top {
+:is(.ukmap--3d, .ukmap--street) .ukmap__face--top {
   transform: translateZ(var(--h));
 }
-.ukmap--3d .ukmap__face--s {
+:is(.ukmap--3d, .ukmap--street) .ukmap__face--s {
   transform: rotateX(90deg) scaleY(1);
 }
-.ukmap--3d .ukmap__face--e {
+:is(.ukmap--3d, .ukmap--street) .ukmap__face--e {
   transform: rotateY(-90deg) scaleX(1);
 }
-.ukmap--3d .ukmap__face--w {
+:is(.ukmap--3d, .ukmap--street) .ukmap__face--w {
   transform: rotateY(90deg) scaleX(1);
 }
 .ukmap__box--picked .ukmap__face--top {

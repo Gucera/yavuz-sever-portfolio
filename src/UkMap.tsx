@@ -98,6 +98,50 @@ const PROSPECTS = (() => {
 })()
 const pct = (v: number, of: number) => `${(v / of) * 100}%`
 
+// "Fit UK": a simplified outline of Great Britain and Northern Ireland (lon, lat), drawn coarse
+// on purpose, with a prospect-density heatmap over the big towns (public geography, not customers)
+const GB: [number, number][] = [
+  [-5, 58.6], [-3, 58.65], [-3.1, 58.4], [-4, 57.9], [-3.8, 57.6], [-2, 57.7], [-1.8, 57.4], [-2.1, 57.1], [-2.5, 56.6],
+  [-3, 56.4], [-2.6, 56.05], [-3.3, 55.98], [-2.1, 55.8], [-1.6, 55.6], [-1.4, 55], [-1.2, 54.6], [-0.5, 54.45], [-0.1, 54.1],
+  [0.1, 53.6], [0.35, 53.2], [0.25, 52.95], [0.4, 52.8], [1.3, 52.95], [1.75, 52.6], [1.6, 52.1], [1.25, 51.85], [0.9, 51.75],
+  [0.6, 51.5], [1.4, 51.35], [1.35, 51.15], [0.95, 50.95], [0.3, 50.75], [-0.8, 50.75], [-1.3, 50.8], [-2, 50.6], [-3, 50.68],
+  [-3.6, 50.25], [-4.2, 50.35], [-5.1, 50], [-5.7, 50.05], [-5, 50.45], [-4.2, 51], [-3.4, 51.2], [-2.7, 51.5], [-3.3, 51.4],
+  [-4.2, 51.55], [-5.2, 51.7], [-4.6, 52.1], [-4.1, 52.45], [-4.1, 52.9], [-4.6, 52.85], [-4.3, 53.2], [-3.1, 53.3],
+  [-2.95, 53.75], [-3.05, 54.05], [-3.6, 54.5], [-3.3, 54.9], [-4.4, 54.7], [-4.9, 54.85], [-5.1, 55.1], [-4.6, 55.5],
+  [-4.9, 55.9], [-5.5, 55.5], [-5.7, 55.3], [-5.6, 56.3], [-6.1, 56.7], [-5.7, 57], [-5.8, 57.6], [-5.1, 58.2],
+]
+const NI: [number, number][] = [
+  [-5.5, 54.3], [-5.9, 54.6], [-6, 55.2], [-7.2, 55.3], [-7.9, 55.05], [-8.1, 54.6], [-7.4, 54.15], [-6.3, 54.05],
+]
+// [lon, lat, weight] — roughly where independent shops cluster
+const HEAT: [number, number, number][] = [
+  [-0.1, 51.5, 1], [-1.9, 52.48, 0.7], [-2.24, 53.48, 0.7], [-1.55, 53.8, 0.5], [-1.47, 53.38, 0.4], [-4.25, 55.86, 0.5],
+  [-3.19, 55.95, 0.35], [-2.6, 51.45, 0.4], [-3.18, 51.48, 0.35], [-1.15, 52.95, 0.4], [-1.13, 52.63, 0.4], [-1.6, 54.97, 0.35],
+  [-2.98, 53.41, 0.45], [0.9, 51.4, 0.3], [-1.4, 50.9, 0.3], [-5.93, 54.6, 0.3], [-0.75, 52.05, 0.25], [1.3, 52.63, 0.2],
+]
+const geo = ([lon, lat]: [number, number] | [number, number, number]) => [(lon + 8.4) * 30, (58.9 - lat) * 48] as const
+const outline = (pts: [number, number][]) => pts.map((p) => geo(p).join(',')).join(' ')
+
+function UkView() {
+  return (
+    <svg className="ukmap__uk" viewBox="0 0 330 440" aria-hidden>
+      <defs>
+        <radialGradient id="ukheat">
+          <stop offset="0" stopColor="#6a59b5" stopOpacity="0.85" />
+          <stop offset="0.45" stopColor="#9686da" stopOpacity="0.45" />
+          <stop offset="1" stopColor="#b8a9e6" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <polygon points={outline(GB)} className="ukmap__uk-land" />
+      <polygon points={outline(NI)} className="ukmap__uk-land" />
+      {HEAT.map((h, i) => {
+        const [x, y] = geo(h)
+        return <circle key={i} cx={x} cy={y} r={10 + h[2] * 26} fill="url(#ukheat)" />
+      })}
+    </svg>
+  )
+}
+
 function Box({ r, h, tone }: { r: Rect; h: number; tone: 'customer' | 'picked' }) {
   return (
     <div
@@ -114,7 +158,7 @@ function Box({ r, h, tone }: { r: Rect; h: number; tone: 'customer' | 'picked' }
 
 /** The map, drawn: a 2D analytic view that tilts into a 3D clay model when the tab opens. */
 function MapArt({ active }: { active: boolean }) {
-  const [mode, setMode] = useState<'2d' | '3d'>('2d')
+  const [mode, setMode] = useState<'2d' | '3d' | 'uk' | 'street'>('2d')
   useEffect(() => {
     if (!active) return setMode('2d')
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -189,6 +233,8 @@ function MapArt({ active }: { active: boolean }) {
           ))}
           <Box r={{ x: TERRACE.x + slice * PICKED[0], y: TERRACE.y, w: slice * PICKED.length, h: TERRACE.h }} h={22} tone="picked" />
         </div>
+        <div className="ukmap__sky" aria-hidden />
+        <UkView />
       </div>
 
       {/* the app's own controls */}
@@ -199,11 +245,18 @@ function MapArt({ active }: { active: boolean }) {
         <button type="button" className={mode === '3d' ? 'is-on' : undefined} onClick={() => setMode('3d')}>
           3D
         </button>
-        <span aria-hidden>Fit UK</span>
-        <span aria-hidden>Street view</span>
+        <button type="button" className={mode === 'uk' ? 'is-on' : undefined} onClick={() => setMode('uk')}>
+          Fit UK
+        </button>
+        <button type="button" className={mode === 'street' ? 'is-on' : undefined} onClick={() => setMode('street')}>
+          Street view
+        </button>
       </div>
       <span className="ukmap__report" aria-hidden>
         ‹ Report
+      </span>
+      <span className="ukmap__hint" aria-hidden>
+        {mode === 'uk' ? 'Prospect density · zoom in for dots and buildings' : 'Street view · WASD to walk · drag to look · Esc to leave'}
       </span>
       <div className="ukmap__legend" aria-hidden>
         <span>
