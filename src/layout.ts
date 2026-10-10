@@ -2,7 +2,8 @@ import type { CSSProperties } from 'react'
 
 export type Viewport = { w: number; h: number; mobile: boolean }
 
-export type ViewMode = 'stack' | 'grid' | 'cards'
+/** 'terminal' keeps the cards in their stack places, hidden behind the command line */
+export type ViewMode = 'stack' | 'grid' | 'cards' | 'terminal'
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 

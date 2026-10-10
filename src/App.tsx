@@ -9,6 +9,7 @@ import { search } from './search'
 import { haptic, isSoundOn, play, setSoundOn } from './sound'
 import { TABLE_TILT, cardStyle, gridGeometry, sidePad, type ViewMode, type Viewport } from './layout'
 import { TabCard } from './TabCard'
+import { Terminal, type Theme } from './Terminal'
 
 const MOBILE_BP = 768
 
@@ -51,7 +52,21 @@ const VIEWS: [ViewMode, string, string][] = [
   ['stack', '▤', 'Stack'],
   ['grid', '▦', 'Grid'],
   ['cards', '♠', 'Cards'],
+  ['terminal', '›_', 'Terminal'],
 ]
+
+const KONAMI = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a']
+
+/** Day between 7:00 and 19:00 local time, when the theme is on auto. */
+const resolveTheme = (t: Theme) => (t !== 'auto' ? t : new Date().getHours() >= 7 && new Date().getHours() < 19 ? 'day' : 'night')
+const readTheme = (): Theme => {
+  try {
+    const t = localStorage.getItem('theme')
+    return t === 'day' || t === 'night' ? t : 'auto'
+  } catch {
+    return 'auto'
+  }
+}
 
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
 const SUITS = ['♠', '♥', '♦', '♣']
@@ -139,6 +154,11 @@ export default function App() {
   const [flipping, setFlipping] = useState(-1)
   const [onTable, setOnTable] = useState<number[]>([])
   const [toast, setToast] = useState<string | null>(null)
+  // site-wide: colour theme, the "email copied" note, the Konami code
+  const [theme, setThemeState] = useState<Theme>(readTheme)
+  const [themeNow, setThemeNow] = useState(() => resolveTheme(readTheme()))
+  const [mailNote, setMailNote] = useState(false)
+  const [konami, setKonami] = useState(0) // > 0 while the cheat plays (a new value restarts it)
   const [shuffling, setShuffling] = useState(false)
   const [soundOn, setSoundState] = useState(isSoundOn)
   const lastDealt = useRef(-1)
@@ -217,7 +237,7 @@ export default function App() {
       setHand(dealHand()) // a fresh, random hand every time
       play('shuffle')
     }
-    if (!reducedMotion()) {
+    if (!reducedMotion() && next !== 'terminal' && view !== 'terminal') {
       flightFrom.current = TABS.map((_, i) => cardStyle(vp, { ...slotOf(i), hoverV: -1 }, view))
       setFlying(true)
     }
@@ -857,10 +877,12 @@ export default function App() {
         return openIdx === -1 && folderOpen ? setFolderOpen(false) : close()
       }
       const typing = e.target instanceof HTMLElement && !!e.target.closest('input, textarea, select')
-      if (e.key === '/' && !typing && view === 'grid' && openIdx === -1) {
+      // ⌘K / Ctrl+K anywhere, or / when not typing: search every tab
+      if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') || (e.key === '/' && !typing)) {
         e.preventDefault()
         setQuery('')
-        return setSpot(true)
+        setSwitcher(null)
+        return setSpot((s) => !s)
       }
       if ((e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') || e.metaKey || e.ctrlKey || e.altKey) return
       if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return
@@ -873,6 +895,82 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [close, openIdx, visible, folderOpen, switcher, spot, editMode, view])
+
+  // ↑ ↑ ↓ ↓ ← → ← → B A, anywhere (except while typing). The ←/→ in the code also step through
+  // the tabs, so once it's complete the tab that was open when it started comes back.
+  const openRef = useRef(openIdx)
+  openRef.current = openIdx
+  useEffect(() => {
+    let seq: string[] = []
+    let startOpen = -1
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return
+      seq = [...seq, e.key.toLowerCase()].slice(-KONAMI.length)
+      if (seq.length >= 2 && seq.slice(-2).join() === 'arrowup,arrowup') startOpen = openRef.current
+      if (seq.join() !== KONAMI.join()) return
+      seq = []
+      setOpenIdx(startOpen)
+      setKonami(Date.now())
+      setToast('↑↑↓↓←→←→BA · Cheat activated: +30 lives')
+      play('shuffle')
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+  useEffect(() => {
+    if (!konami) return
+    const t = window.setTimeout(() => {
+      setKonami(0)
+      setToast(null)
+    }, 4200)
+    return () => window.clearTimeout(t)
+  }, [konami])
+
+  // Colour theme: day or night, or auto (follows the clock, checked every few minutes).
+  const setTheme = useCallback((t: Theme) => {
+    setThemeState(t)
+    setThemeNow(resolveTheme(t))
+    try {
+      if (t === 'auto') localStorage.removeItem('theme')
+      else localStorage.setItem('theme', t)
+    } catch {
+      // storage blocked: the choice just isn't remembered
+    }
+  }, [])
+  useEffect(() => {
+    document.documentElement.dataset.theme = themeNow
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeNow === 'day' ? '#efeae0' : '#0c0c0d')
+  }, [themeNow])
+  useEffect(() => {
+    if (theme !== 'auto') return
+    const t = window.setInterval(() => setThemeNow(resolveTheme('auto')), 5 * 60 * 1000)
+    return () => window.clearInterval(t)
+  }, [theme])
+
+  // Any email link copies the address (mail apps often aren't set up); the note offers to open one.
+  const copyEmail = useCallback(() => {
+    const done = () => setMailNote(true)
+    try {
+      navigator.clipboard.writeText(PROFILE.email).then(done, done)
+    } catch {
+      done()
+    }
+  }, [])
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const a = e.target instanceof Element ? e.target.closest('a[href^="mailto:"]') : null
+      if (!a || a.closest('.mail-note') || e.metaKey || e.ctrlKey || e.shiftKey) return
+      e.preventDefault()
+      copyEmail()
+    }
+    document.addEventListener('click', onClick, true)
+    return () => document.removeEventListener('click', onClick, true)
+  }, [copyEmail])
+  useEffect(() => {
+    if (!mailNote) return
+    const t = window.setTimeout(() => setMailNote(false), 4500)
+    return () => window.clearTimeout(t)
+  }, [mailNote])
 
   useEffect(() => {
     if (switcher === null) return
@@ -918,7 +1016,7 @@ export default function App() {
 
   return (
     <main
-      className={`stage stage--${view}${flying ? ' stage--flying' : ''}${landing ? ' stage--landing' : ''}${folderOpen ? ' stage--folder-open' : ''}${dealing !== -1 ? ' stage--dealing' : ''}${editMode ? ' stage--editing' : ''}${shuffling ? ' stage--shuffling' : ''}`}
+      className={`stage stage--${view}${flying ? ' stage--flying' : ''}${landing ? ' stage--landing' : ''}${folderOpen ? ' stage--folder-open' : ''}${dealing !== -1 ? ' stage--dealing' : ''}${editMode ? ' stage--editing' : ''}${shuffling ? ' stage--shuffling' : ''}${konami ? ' stage--konami' : ''}`}
       ref={stageRef}
     >
       {/* card table: behind everything, zoomed on its own when a card is dealt */}
@@ -956,7 +1054,7 @@ export default function App() {
                   onClick={() => toggleView(mode)}
                 >
                   <span aria-hidden>{icon}</span>
-                  {label}
+                  <span className="view-switch__label">{label}</span>
                 </button>
               ))}
             </div>
@@ -978,6 +1076,25 @@ export default function App() {
                 {soundOn ? '🔈' : '🔇'}
               </button>
             )}
+            <button
+              className="header__btn"
+              aria-label="Search all tabs"
+              title="Search (⌘K)"
+              onClick={() => {
+                setQuery('')
+                setSpot(true)
+              }}
+            >
+              ⌕<kbd>⌘K</kbd>
+            </button>
+            <button
+              className="header__btn"
+              aria-label={themeNow === 'day' ? 'Switch to the night theme' : 'Switch to the day theme'}
+              title={theme === 'auto' ? 'Theme follows the time of day' : `${theme} theme`}
+              onClick={() => setTheme(themeNow === 'day' ? 'night' : 'day')}
+            >
+              {themeNow === 'day' ? '☾' : '☀'}
+            </button>
             <span className="header__count">{n} tabs open</span>
             <a href={PROFILE.cv} download>
               CV ↓
@@ -1115,6 +1232,25 @@ export default function App() {
         </section>
       )}
 
+      {/* the terminal view */}
+      {view === 'terminal' && (
+        <div className="term-wrap" style={{ left: pad, right: pad }}>
+          <Terminal
+            onOpen={(i) => {
+              setGone((g) => g.filter((x) => x !== i))
+              setOpenIdx(i)
+            }}
+            onView={toggleView}
+            onTheme={setTheme}
+            onSearch={() => {
+              setQuery('')
+              setSpot(true)
+            }}
+            onCopyEmail={copyEmail}
+          />
+        </div>
+      )}
+
       {/* Option/Ctrl+Tab switcher */}
       {switcher !== null && (
         <div className="switcher" role="listbox" aria-label="Switch tab">
@@ -1204,6 +1340,37 @@ export default function App() {
 
       {/* cards: shuffle and the poker easter egg */}
       {toast && <div className="toast" role="status">{toast}</div>}
+      {mailNote && (
+        <div className="mail-note" role="status">
+          <span>
+            <b>{PROFILE.email}</b> copied
+          </span>
+          <a
+            href={`mailto:${PROFILE.email}`}
+            onClick={() => setMailNote(false)}
+          >
+            Open mail app
+          </a>
+        </div>
+      )}
+      {konami > 0 && (
+        <div className="confetti" key={konami} aria-hidden>
+          {Array.from({ length: 90 }, (_, k) => (
+            <i
+              key={k}
+              style={
+                {
+                  left: `${(k * 37) % 100}%`,
+                  background: TABS[k % TABS.length].bg,
+                  '--d': `${(k % 13) * 0.11}s`,
+                  '--x': `${((k * 53) % 41) - 20}vw`,
+                  '--r': `${(k * 97) % 720}deg`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
+      )}
 
       {/* each tab address counts as its own page view in Vercel Analytics */}
       <Analytics route={tabPath(openIdx)} path={tabPath(openIdx)} />
