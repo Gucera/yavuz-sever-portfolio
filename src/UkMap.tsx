@@ -426,7 +426,7 @@ export function UkMapBody({ tab, active, meta, next }: Props) {
           {node('tiles', 'ukm__arch-tiles')}
           <span className="ukm__arrow ukm__arrow--tiles">↓</span>
           {node('browser', 'ukm__arch-browser')}
-          <span className="ukm__arrow">⇄</span>
+          <span className="ukm__arrow ukm__arrow--api">⇄</span>
           {node('api', 'ukm__arch-api')}
           <span className="ukm__arrow ukm__arrow--open">⇄</span>
           {node('open', 'ukm__arch-open')}
