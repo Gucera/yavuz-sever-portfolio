@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { UKMAP, type Tab } from './data'
 
 type Props = {
@@ -166,9 +166,27 @@ function MapArt({ active }: { active: boolean }) {
     return () => window.clearTimeout(t)
   }, [active])
 
+  // street view is a real first-person 3D scene (three.js), loaded only when it's asked for
+  const streetRef = useRef<HTMLDivElement>(null)
+  const [streetReady, setStreetReady] = useState(false)
+  useEffect(() => {
+    if (mode !== 'street') return
+    let off: (() => void) | undefined
+    let cancelled = false
+    import('./streetScene').then(({ mountStreet }) => {
+      if (cancelled || !streetRef.current) return
+      off = mountStreet(streetRef.current, { onReady: () => setStreetReady(true), onExit: () => setMode('3d') })
+    })
+    return () => {
+      cancelled = true
+      off?.()
+      setStreetReady(false)
+    }
+  }, [mode])
+
   const slice = TERRACE.w / NUMBERS.length
   return (
-    <div className={`ukmap ukmap--${mode}`} aria-label="Illustration of the customer map, switching between 2D and 3D" role="img">
+    <div className={`ukmap ukmap--${mode}`} aria-label="Illustration of the customer map: 2D, 3D, the whole UK and a street view" role="group">
       <div className="ukmap__view">
         <div className="ukmap__plane">
           <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden>
@@ -236,6 +254,7 @@ function MapArt({ active }: { active: boolean }) {
         <div className="ukmap__sky" aria-hidden />
         <UkView />
       </div>
+      {mode === 'street' && <div ref={streetRef} className={`ukmap__street${streetReady ? ' is-ready' : ''}`} />}
 
       {/* the app's own controls */}
       <div className="ukmap__ctl">
@@ -256,7 +275,14 @@ function MapArt({ active }: { active: boolean }) {
         ‹ Report
       </span>
       <span className="ukmap__hint" aria-hidden>
-        {mode === 'uk' ? 'Prospect density · zoom in for dots and buildings' : 'Street view · WASD to walk · drag to look · Esc to leave'}
+        {mode === 'uk' ? (
+          'Prospect density · zoom in for dots and buildings'
+        ) : (
+          <>
+            <span className="ukmap__hint-desk">Street view · drag to look · WASD or arrows to walk · Esc to leave</span>
+            <span className="ukmap__hint-touch">Street view · drag to look around</span>
+          </>
+        )}
       </span>
       <div className="ukmap__legend" aria-hidden>
         <span>
