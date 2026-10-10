@@ -10,6 +10,7 @@ import { UkMapBody } from './UkMap'
 import { DimarkBody } from './Dimark'
 import { CandyBody } from './Candy'
 import { CASE_STUDIES } from './data'
+import { Icon } from './Icon'
 
 type Props = {
   tab: Tab
@@ -259,7 +260,7 @@ export const TabCard = forwardRef<HTMLDivElement, Props>(function TabCard(
             tabIndex={hidden ? -1 : 0}
             aria-label={isOpen ? `Close ${tab.title}` : `Dismiss ${tab.title}`}
           >
-            ×
+            <Icon name="close" size={13} />
           </button>
           <span className="card__tab">
             <i style={{ background: tab.bg }} />
@@ -288,7 +289,7 @@ const CardContent = memo(function CardContent({ tab, isOpen, onNext }: { tab: Ta
   )
   const next = (
     <button className="card__next" onClick={onNext} tabIndex={isOpen ? 0 : -1} data-reveal>
-      next tab →
+      next tab <Icon name="arrowRight" size={14} />
     </button>
   )
   return (

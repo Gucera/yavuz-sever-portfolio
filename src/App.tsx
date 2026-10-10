@@ -6,10 +6,10 @@ import { Analytics } from '@vercel/analytics/react'
 import { INCOGNITO, PROFILE, TABS, isProject } from './data'
 import { bestHand } from './poker'
 import { search } from './search'
-import { haptic, isSoundOn, play, setSoundOn } from './sound'
-import { TABLE_TILT, cardStyle, gridGeometry, sidePad, type ViewMode, type Viewport } from './layout'
+import { TABLE_TILT, areaTop, cardStyle, gridGeometry, sidePad, type ViewMode, type Viewport } from './layout'
 import { TabCard } from './TabCard'
 import { Terminal, type Theme } from './Terminal'
+import { Icon, type IconName } from './Icon'
 
 const MOBILE_BP = 768
 
@@ -19,12 +19,24 @@ const readViewport = (): Viewport => ({
   mobile: window.innerWidth < MOBILE_BP,
 })
 
+/** The window size, plus where the header ends (it wraps on narrow windows and the content
+ *  below it has to start lower). */
 function useViewport(): Viewport {
   const [vp, setVp] = useState(readViewport)
   useEffect(() => {
-    const onResize = () => setVp(readViewport())
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    const header = document.querySelector('.header')
+    const measure = () => {
+      const next = { ...readViewport(), headerBottom: header ? Math.round(header.getBoundingClientRect().bottom) : undefined }
+      setVp((v) => (v.w === next.w && v.h === next.h && v.headerBottom === next.headerBottom ? v : next))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    if (header) ro.observe(header)
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
   }, [])
   return vp
 }
@@ -48,11 +60,11 @@ const tabFromLocation = () => {
   return fromPath !== -1 ? fromPath : find(decodeURIComponent(location.hash.slice(1)))
 }
 
-const VIEWS: [ViewMode, string, string][] = [
-  ['stack', '▤', 'Stack'],
-  ['grid', '▦', 'Grid'],
-  ['cards', '♠', 'Cards'],
-  ['terminal', '›_', 'Terminal'],
+const VIEWS: [ViewMode, IconName, string][] = [
+  ['stack', 'stack', 'Stack'],
+  ['grid', 'grid', 'Grid'],
+  ['cards', 'cards', 'Cards'],
+  ['terminal', 'terminal', 'Terminal'],
 ]
 
 const KONAMI = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a']
@@ -160,7 +172,6 @@ export default function App() {
   const [mailNote, setMailNote] = useState(false)
   const [konami, setKonami] = useState(0) // > 0 while the cheat plays (a new value restarts it)
   const [shuffling, setShuffling] = useState(false)
-  const [soundOn, setSoundState] = useState(isSoundOn)
   const lastDealt = useRef(-1)
   const dealFrom = useRef<{ top: number; left: number; width: number; height: number; fa: number; rx: number; pt: number } | null>(null)
   const lastFlip = useRef(0)
@@ -235,7 +246,6 @@ export default function App() {
     setFlipped([])
     if (next === 'cards') {
       setHand(dealHand()) // a fresh, random hand every time
-      play('shuffle')
     }
     if (!reducedMotion() && next !== 'terminal' && view !== 'terminal') {
       flightFrom.current = TABS.map((_, i) => cardStyle(vp, { ...slotOf(i), hoverV: -1 }, view))
@@ -426,7 +436,6 @@ export default function App() {
     setOnTable((t) => (t.includes(i) ? t : [...t, i]))
     lastDealt.current = i
     setFlipped((f) => f.filter((x) => x !== i))
-    play('draw')
     if (reducedMotion()) return setOpenIdx(i)
     setHoverIdx(-1)
     setDealing(i)
@@ -517,10 +526,6 @@ export default function App() {
     // 1. straight from the hand onto the table: a short arc while it tips back and lies down
     tl.to(el, { ...table, duration: 0.6, ease: 'power3.out' })
     tl.to(page, { scale: table.width / vp.w, duration: 0.6, ease: 'power3.out' }, '<') // thumbnail follows the card's size
-    tl.call(() => {
-      play('place')
-      haptic()
-    }, undefined, 0.54)
     tl.to(
       st,
       {
@@ -723,7 +728,6 @@ export default function App() {
       if (half + p < n) order.push(half + p) // right half
     }
     const riffle = tl.duration() + 0.06
-    tl.call(() => play('shuffle'), undefined, riffle)
     order.forEach((k, j) => {
       const at = riffle + j * 0.065
       tl.call(() => z(k, 60 + j), undefined, at)
@@ -752,10 +756,7 @@ export default function App() {
     const spread = tl.duration()
     els.forEach((_, k) => {
       const at = spread + k * 0.06
-      tl.call(() => {
-        z(k, 90 + n - k) // already in the hand's overlap order: About me on top
-        play('draw')
-      }, undefined, at)
+      tl.call(() => z(k, 90 + n - k), undefined, at) // already in the hand's overlap order: About me on top
       tl.to(st[k], { g: 0, s: 1, duration: 0.6, ease: 'power3.out', onUpdate: () => draw(k) }, at)
       tl.to(st[k], { keyframes: { sx: [1, 0.02, 1] }, duration: 0.26, ease: 'none', onUpdate: () => draw(k) }, at + 0.08)
       tl.call(() => delete els[k].dataset.facedown, undefined, at + 0.21)
@@ -767,7 +768,6 @@ export default function App() {
     const now = performance.now()
     if (view !== 'cards' || dealing !== -1 || now - lastFlip.current < 600) return
     lastFlip.current = now
-    play('draw')
     setFlipping(i)
     // squash to the edge, swap faces and open straight back up — no hold at the edge
     window.setTimeout(() => {
@@ -912,7 +912,6 @@ export default function App() {
       setOpenIdx(startOpen)
       setKonami(Date.now())
       setToast('↑↑↓↓←→←→BA · Cheat activated: +30 lives')
-      play('shuffle')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -1040,7 +1039,8 @@ export default function App() {
           <nav className="header__socials" aria-label="Social links">
             {PROFILE.socials.map(([label, url]) => (
               <a key={label} href={url} target="_blank" rel="noreferrer">
-                {label} ↗
+                {label}
+                <Icon name="arrowUpRight" size={12} />
               </a>
             ))}
           </nav>
@@ -1053,27 +1053,15 @@ export default function App() {
                   aria-pressed={view === mode}
                   onClick={() => toggleView(mode)}
                 >
-                  <span aria-hidden>{icon}</span>
+                  <Icon name={icon} size={15} />
                   <span className="view-switch__label">{label}</span>
                 </button>
               ))}
             </div>
             {view === 'cards' && (
               <button className="shuffle" onClick={shuffle} disabled={dealing !== -1}>
-                ♣<span className="shuffle__label"> Shuffle</span>
-              </button>
-            )}
-            {view === 'cards' && (
-              <button
-                className="sound-toggle"
-                aria-pressed={soundOn}
-                aria-label={soundOn ? 'Mute card sounds' : 'Turn card sounds on'}
-                onClick={() => {
-                  setSoundOn(!soundOn)
-                  setSoundState(!soundOn)
-                }}
-              >
-                {soundOn ? '🔈' : '🔇'}
+                <Icon name="shuffle" size={15} />
+                <span className="shuffle__label">Shuffle</span>
               </button>
             )}
             <button
@@ -1085,7 +1073,8 @@ export default function App() {
                 setSpot(true)
               }}
             >
-              ⌕<kbd>⌘K</kbd>
+              <Icon name="search" size={15} />
+              <kbd>⌘K</kbd>
             </button>
             <button
               className="header__btn"
@@ -1093,11 +1082,12 @@ export default function App() {
               title={theme === 'auto' ? 'Theme follows the time of day' : `${theme} theme`}
               onClick={() => setTheme(themeNow === 'day' ? 'night' : 'day')}
             >
-              {themeNow === 'day' ? '☾' : '☀'}
+              <Icon name={themeNow === 'day' ? 'moon' : 'sun'} size={15} />
             </button>
             <span className="header__count">{n} tabs open</span>
             <a href={PROFILE.cv} download>
-              CV ↓
+              CV
+              <Icon name="download" size={12} />
             </a>
             <a href={`mailto:${PROFILE.email}`}>{PROFILE.email}</a>
           </div>
@@ -1208,9 +1198,9 @@ export default function App() {
 
       {/* stack: the surprise tab once every tab has been closed */}
       {view === 'stack' && n === 0 && openIdx === -1 && (
-        <section className="incognito" style={{ left: pad, right: pad }} aria-label="Incognito tab">
+        <section className="incognito" style={{ left: pad, right: pad, top: areaTop(vp), maxHeight: vp.h - areaTop(vp) - (vp.mobile ? 86 : 80) }} aria-label="Incognito tab">
           <div className="incognito__bar">
-            <span>🕶</span>
+            <Icon name="glasses" size={17} />
             {INCOGNITO.title}
           </div>
           <div className="incognito__body">
@@ -1219,8 +1209,8 @@ export default function App() {
             <ul className="incognito__facts">
               {INCOGNITO.facts.map(([icon, title, text]) => (
                 <li key={title}>
-                  <span className="incognito__icon" aria-hidden>
-                    {icon}
+                  <span className="incognito__icon">
+                    <Icon name={icon} size={20} />
                   </span>
                   <strong>{title}</strong>
                   <p>{text}</p>
@@ -1234,7 +1224,7 @@ export default function App() {
 
       {/* the terminal view */}
       {view === 'terminal' && (
-        <div className="term-wrap" style={{ left: pad, right: pad }}>
+        <div className="term-wrap" style={{ left: pad, right: pad, top: areaTop(vp) }}>
           <Terminal
             onOpen={(i) => {
               setGone((g) => g.filter((x) => x !== i))
@@ -1272,19 +1262,19 @@ export default function App() {
       {view === 'grid' && openIdx === -1 && !folderOpen && (
         <nav className="dock" aria-label="Links" ref={dockRef} onPointerMove={magnify} onPointerLeave={unmagnify}>
           <a className="dock__item dock__item--gh" href={PROFILE.socials[0][1]} target="_blank" rel="noreferrer" aria-label="GitHub">
-            <span>GH</span>
+            <Icon name="github" size={24} />
           </a>
           <a className="dock__item dock__item--in" href={PROFILE.socials[1][1]} target="_blank" rel="noreferrer" aria-label="LinkedIn">
-            <span>in</span>
+            <Icon name="linkedin" size={22} />
           </a>
           <a className="dock__item dock__item--ig" href={PROFILE.socials[2][1]} target="_blank" rel="noreferrer" aria-label="Instagram">
-            <span>IG</span>
+            <Icon name="instagram" size={24} />
           </a>
           <a className="dock__item dock__item--mail" href={`mailto:${PROFILE.email}`} aria-label="Email">
-            <span>✉</span>
+            <Icon name="mail" size={24} />
           </a>
           <a className="dock__item dock__item--cv" href={PROFILE.cv} download aria-label="Download CV">
-            <span>CV</span>
+            <Icon name="file" size={24} />
           </a>
           <button
             className="dock__item dock__item--search"
@@ -1294,7 +1284,7 @@ export default function App() {
               setSpot(true)
             }}
           >
-            <span>⌕</span>
+            <Icon name="search" size={24} />
           </button>
         </nav>
       )}

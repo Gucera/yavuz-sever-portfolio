@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 
-export type Viewport = { w: number; h: number; mobile: boolean }
+/** headerBottom: where the header actually ends (it wraps onto more lines on narrow windows) */
+export type Viewport = { w: number; h: number; mobile: boolean; headerBottom?: number }
 
 /** 'terminal' keeps the cards in their stack places, hidden behind the command line */
 export type ViewMode = 'stack' | 'grid' | 'cards' | 'terminal'
@@ -92,7 +93,7 @@ export function cardStyle(vp: Viewport, slot: Slot, mode: ViewMode = 'stack'): C
   const pad = sidePad(vp)
   // Short screens (landscape phones, small laptops) get a compact header, so the stack starts higher.
   const short = vp.h < 620
-  const top0 = short ? 112 : vp.mobile ? 214 : 190
+  const top0 = areaTop(vp)
   const lastTop = vp.h - (short ? 170 : vp.mobile ? 200 : 300)
   const step = n > 1 ? clamp((lastTop - top0) / (n - 1), short ? 22 : 40, vp.mobile ? 100 : 96) : 0
   const shrink = vp.mobile ? 0.03 : 0.025
@@ -125,7 +126,8 @@ export function cardStyle(vp: Viewport, slot: Slot, mode: ViewMode = 'stack'): C
 export const dockSpace = (vp: Viewport) => (vp.mobile ? 78 : 96)
 
 /** Top of the card area: below the header, compact on short screens. */
-const areaTop = (vp: Viewport) => (vp.h < 620 ? 112 : vp.mobile ? 214 : 190)
+/** Where the content area starts: the designed offset, or lower when the header has wrapped. */
+export const areaTop = (vp: Viewport) => Math.max(vp.h < 620 ? 112 : vp.mobile ? 214 : 190, (vp.headerBottom ?? 0) + (vp.mobile ? 14 : 22))
 
 export type Rect = { top: number; left: number; width: number; height: number }
 
@@ -231,7 +233,10 @@ function gridStyle(vp: Viewport, { v, openV, hoverV, gone, grid }: Slot): CSSPro
 
 /** Playing-card size for the cards view (portrait, 5:7). */
 const handCardSize = (vp: Viewport) => {
-  const ch = vp.mobile ? clamp(vp.h * 0.3, 170, 236) : clamp(vp.h * 0.5, 260, 440)
+  const want = vp.mobile ? clamp(vp.h * 0.3, 170, 236) : clamp(vp.h * 0.5, 260, 440)
+  // short windows (landscape phones): never let the hand reach up under the header
+  const room = vp.h - (vp.mobile ? 26 : 40) - areaTop(vp) - 8
+  const ch = Math.max(110, Math.min(want, room))
   return { cw: ch / 1.4, ch }
 }
 
@@ -271,7 +276,7 @@ function tableCard(vp: Viewport, t: number, nt: number) {
   const span = vp.w - (vp.mobile ? 32 : 160) - w
   const step = nt > 1 ? Math.min(w + gap, span / (nt - 1)) : 0
   const left = vp.w / 2 - (step * (nt - 1)) / 2 - w / 2 + t * step
-  const top = vp.h * (vp.mobile ? 0.37 : 0.35) - h / 2
+  const top = Math.max(vp.h * (vp.mobile ? 0.37 : 0.35) - h / 2, areaTop(vp))
   return { top, left, width: w, height: h, angle: (((t * 37) % 11) - 5) * 1.2 }
 }
 
