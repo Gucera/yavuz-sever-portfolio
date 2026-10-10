@@ -1,4 +1,4 @@
-import { ABOUT, CANDY, CASE_STUDIES, DIMARK, EDUCATION, EXPERIENCE, NISA, TABS, type Tab } from './data'
+import { ABOUT, CANDY, CASE_STUDIES, DIMARK, EDUCATION, EXPERIENCE, NISA, TABS, UKMAP, type Tab } from './data'
 
 /** Every piece of text a tab shows, for the Spotlight search. */
 function textsOf(tab: Tab): string[] {
@@ -8,6 +8,7 @@ function textsOf(tab: Tab): string[] {
     experience: EXPERIENCE,
     case: CASE_STUDIES[tab.title],
     nisa: NISA,
+    map: UKMAP,
     dimark: DIMARK,
     candy: CANDY,
   }

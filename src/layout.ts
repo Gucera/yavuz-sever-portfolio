@@ -130,7 +130,7 @@ export type Rect = { top: number; left: number; width: number; height: number }
 
 /**
  * Grid view geometry: plain tabs as tiles, the projects collected in an iOS-style folder tile
- * (2×2 mini cards), and the expanded folder panel (2×2 large cards) when it is opened.
+ * (mini cards), and the expanded folder panel (large cards) when it is opened.
  */
 export function gridGeometry(vp: Viewport, nTabs: number, nProjects: number, folderAt = nTabs) {
   const m = nTabs + (nProjects ? 1 : 0)
@@ -154,20 +154,23 @@ export function gridGeometry(vp: Viewport, nTabs: number, nProjects: number, fol
   }
   const folder = tile(folderAt)
 
-  // closed folder: 2×2 mini cards, leaving room for the label at the bottom
+  // closed folder: mini cards in a 2×2 grid (3×3 once there are more than four projects, like
+  // iOS), leaving room for the label at the bottom
+  const fc = nProjects > 4 ? 3 : 2
   const inset = Math.min(folder.width, folder.height) * 0.08
   const labelSpace = vp.mobile ? 26 : 40
-  const g = inset * 0.6
-  const mw = (folder.width - inset * 2 - g) / 2
-  const mh = (folder.height - inset - (inset + labelSpace) - g) / 2
+  const g = inset * (fc === 3 ? 0.45 : 0.6)
+  const mw = (folder.width - inset * 2 - g * (fc - 1)) / fc
+  const mh = (folder.height - inset - (inset + labelSpace) - g * (fc - 1)) / fc
   const mini = (p: number): Rect => ({
-    top: folder.top + inset + Math.floor(p / 2) * (mh + g),
-    left: folder.left + inset + (p % 2) * (mw + g),
+    top: folder.top + inset + Math.floor(p / fc) * (mh + g),
+    left: folder.left + inset + (p % fc) * (mw + g),
     width: mw,
     height: mh,
   })
 
-  // open folder: a centred panel with a 2×2 grid of large cards
+  // open folder: a centred panel of large cards, 2 across (3 on wider screens once there are
+  // more than four); an incomplete last row is centred
   const pw = vp.mobile ? vp.w - 32 : Math.min(vp.w - pad * 2, 1040)
   const titleSpace = vp.mobile ? 52 : 64
   const ph = Math.min(vp.h - top0 - 24, pw * (vp.mobile ? 1.55 : 0.68))
@@ -179,14 +182,21 @@ export function gridGeometry(vp: Viewport, nTabs: number, nProjects: number, fol
   }
   const pi = vp.mobile ? 12 : 22
   const pg = vp.mobile ? 12 : 20
-  const bw = (pw - pi * 2 - pg) / 2
-  const bh = (ph - titleSpace - pi - pg) / 2
-  const big = (p: number): Rect => ({
-    top: panel.top + titleSpace + Math.floor(p / 2) * (bh + pg),
-    left: panel.left + pi + (p % 2) * (bw + pg),
-    width: bw,
-    height: bh,
-  })
+  const bc = !vp.mobile && nProjects > 4 ? 3 : 2
+  const br = Math.max(2, Math.ceil(nProjects / bc))
+  const bw = (pw - pi * 2 - pg * (bc - 1)) / bc
+  const bh = (ph - titleSpace - pi - pg * (br - 1)) / br
+  const big = (p: number): Rect => {
+    const row = Math.floor(p / bc)
+    const inRow = Math.min(bc, nProjects - row * bc)
+    const offset = ((bc - inRow) * (bw + pg)) / 2
+    return {
+      top: panel.top + titleSpace + row * (bh + pg),
+      left: panel.left + pi + offset + (p % bc) * (bw + pg),
+      width: bw,
+      height: bh,
+    }
+  }
 
   return { tile, folder, mini, panel, big }
 }

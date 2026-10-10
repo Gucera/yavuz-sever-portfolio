@@ -6,6 +6,7 @@ import { AboutBody } from './About'
 import { ExperienceBody } from './Experience'
 import { CaseStudyBody } from './CaseStudy'
 import { NisaBody } from './Nisa'
+import { UkMapBody } from './UkMap'
 import { DimarkBody } from './Dimark'
 import { CandyBody } from './Candy'
 import { CASE_STUDIES } from './data'
@@ -314,6 +315,8 @@ const CardContent = memo(function CardContent({ tab, isOpen, onNext }: { tab: Ta
         <DimarkBody tab={tab} active={isOpen} meta={meta} next={next} />
       ) : tab.extra === 'nisa' ? (
         <NisaBody tab={tab} active={isOpen} meta={meta} next={next} />
+      ) : tab.extra === 'map' ? (
+        <UkMapBody tab={tab} active={isOpen} meta={meta} next={next} />
       ) : tab.extra === 'case' && CASE_STUDIES[tab.title] ? (
         <CaseStudyBody tab={tab} study={CASE_STUDIES[tab.title]} active={isOpen} meta={meta} next={next} />
       ) : (

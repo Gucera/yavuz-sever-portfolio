@@ -14,7 +14,7 @@ export type Tab = {
   /** Labels for the media placeholders: [hero, detail, detail] */
   media: [string, string, string]
   /** Tab-specific layout rendered instead of the default body */
-  extra?: 'about' | 'education' | 'experience' | 'case' | 'nisa' | 'dimark' | 'candy'
+  extra?: 'about' | 'education' | 'experience' | 'case' | 'nisa' | 'map' | 'dimark' | 'candy'
   /** Card background / ink colour */
   bg: string
   ink: string
@@ -22,7 +22,7 @@ export type Tab = {
 
 /** Project case studies — collected in a folder in the grid view. */
 export const isProject = (tab: Tab) =>
-  tab.extra === 'case' || tab.extra === 'nisa' || tab.extra === 'dimark' || tab.extra === 'candy'
+  tab.extra === 'case' || tab.extra === 'nisa' || tab.extra === 'map' || tab.extra === 'dimark' || tab.extra === 'candy'
 
 export const PROFILE = {
   name: 'Yavuz Selim Sever',
@@ -128,6 +128,24 @@ export const TABS: Tab[] = [
     extra: 'nisa',
     bg: '#1a1a1a',
     ink: '#c6ff3d',
+  },
+  {
+    title: 'UK Customer Map',
+    kind: 'Geospatial full-stack',
+    year: '2026',
+    url: 'customer-map.internal',
+    description:
+      'A 2D/3D map of Great Britain inside a wholesale distributor’s internal portal. It puts customer shops on their actual building, overlays about 98,000 independent shops that aren’t customers yet, and turns both into region-by-region sales reports, using only free, open UK data.',
+    meta: [
+      ['Role', 'Product design · Full-stack development'],
+      ['Type', 'Internal tool'],
+      ['Stack', 'Next.js · MapLibre GL · FastAPI · PostgreSQL'],
+      ['Data cost', '£0 · open data only'],
+    ],
+    media: ['map', 'detail', 'detail'],
+    extra: 'map',
+    bg: '#ece6da',
+    ink: '#23212b',
   },
   {
     title: 'Dimark Online',
@@ -595,4 +613,86 @@ export const INCOGNITO = {
     ['📍', 'Home base', 'London. I graduated from the University of East London with a First Class BSc (Hons) in Computer Science.'],
   ] as [string, string, string][],
   hint: 'Want the tabs back? Press “undo” at the bottom of the screen, or reload the page.',
+}
+
+/**
+ * UK Customer Map. Customer names, account codes, counts, locations and figures are left out on
+ * purpose (internal data); percentages and open-data figures only. The map art is illustrative.
+ */
+export const UKMAP = {
+  subtitle: 'Customer & Prospect Map',
+  stats: [
+    ['22% → 68%', 'of customer shops placed on their exact building'],
+    ['94%', 'of building-level shops matched to a Land Registry parcel'],
+    ['~98k', 'independent prospect shops loaded across the UK'],
+    ['5.5 s', 'average lookup per address, down from several minutes'],
+  ] as [string, string][],
+  problem: [
+    'The business sells groceries to small independent shops all over the UK. Its customer records only held free-text addresses typed in over many years: shop names mixed into street lines, unit numbers like “2C-1”, misspellings, and postal towns that aren’t the place the shop is actually in.',
+    'Sales staff couldn’t see where customers clustered, which areas were under-served, or which shops nearby weren’t buying yet. The goal: a map a rep can open, fly to a street, click a building and see that shop’s account, plus every potential customer we weren’t reaching.',
+  ],
+  constraints: [
+    ['No paid data', 'Royal Mail PAF, OS AddressBase and Google Places were ruled out on cost or licence terms.'],
+    ['Core data is read-only', 'Business tables couldn’t change. Everything the map needs lives in its own tables.'],
+    ['Development data only', 'All customer data came from a mirrored database, never the live trading system.'],
+  ] as [string, string][],
+  features: [
+    ['2D analytic + 3D clay model', 'A calm 2D basemap for data, and a 3D mode that tilts the camera to 55° and raises buildings as white blocks, like an architect’s model.'],
+    ['Customers on their building', 'Every customer is geocoded once and cached. Search by name, address or postcode flies to the shop and paints its building.'],
+    ['Prospects layer', '~98,000 independent food shops that aren’t customers, sorted by type. A heatmap at country scale turns into dots and painted buildings as you zoom in.'],
+    ['Street view walking mode', 'First person at 1.8 m eye height inside the 3D model: WASD to walk, drag to look, click a spot to walk there.'],
+    ['Sales reports by region and rep', 'Customer counts, 30/90-day sales with change, balances and overdue debt, exported as an Excel workbook with native charts.'],
+    ['Market-share reports', 'For any region: unserved shops by type, ward and postcode district, and our share of the local market.'],
+  ] as [string, string][],
+  pipeline: [
+    ['Postcode centres first', 'Every postcode is resolved in bulk, so all customers appear on the map at once while slower building lookups run in the background.'],
+    ['Parse the address', 'Split out shop name, premise, house number or range (“539–541”), street, locality and postal town; expand abbreviations.'],
+    ['Ordered search attempts', 'Up to eight query shapes against Nominatim, from structured street + postcode to street-only, duplicates removed.'],
+    ['Validate every hit', 'Within 2.5 km of the postcode, street similarity ≥ 0.85, house number must match. Only then does it count as a building.'],
+    ['Fuzzy fallback', 'Nearby streets and numbers from Overpass are fuzzy-matched, which is how “Kingsly Road” becomes “Kingsley Road”.'],
+    ['EPC → UPRN → coordinates', 'The government EPC register maps address text to a property’s UPRN, placed with OS Open UPRN coordinates.'],
+    ['Parcel assignment', 'Building-level points are matched to their HM Land Registry parcel, which is what lets the map cut a terrace down to one shop.'],
+  ] as [string, string][],
+  // share of customer addresses at each precision, first run vs. pipeline v2
+  precision: [
+    ['First run', [22, 21, 55, 2]],
+    ['Pipeline v2', [68, 21, 9, 2]],
+  ] as [string, [number, number, number, number]][],
+  slicing: [
+    ['Point-in-polygon', 'Only the one polygon that contains the address point is used, never the whole tile feature.'],
+    ['Parcel clipping', 'When the shop has its own Land Registry parcel, the building is clipped to it.'],
+    ['House-number slicing', 'Otherwise the terrace is cut at bisectors between house-number labels and only the shop’s slice is painted.'],
+    ['Safety guard', 'Too big or too far from the address? Show a pin and a ground ring instead. Wrong paint is worse than no paint.'],
+  ] as [string, string][],
+  zoom: [
+    ['Below z10', 'heatmap from a cached grid count'],
+    ['z10+', 'dots for the viewport, a stable sample of up to 8,000'],
+    ['z14+', 'prospect shops painted on their building'],
+    ['z16+', 'shops on screen queued for building-level lookup'],
+  ] as [string, string][],
+  architecture: {
+    browser: ['Browser', 'Next.js + MapLibre GL: rendering, layers, terrace slicing, street view'],
+    api: ['FastAPI backend', 'Address parser, geocoder, background workers, rate limits, reports, Excel export'],
+    db: ['PostgreSQL', 'Read-only customer mirror + map-owned tables: geocodes, parcels, prospects'],
+    tiles: ['Vector tiles', 'OpenFreeMap: OSM buildings, heights, house numbers · no API key'],
+    open: ['Open UK data', 'Nominatim · Overpass · postcodes.io · EPC · OS Open UPRN · HMLR INSPIRE · FSA'],
+  } as Record<string, [string, string]>,
+  challenges: [
+    ['Most customers stuck at postcode level', 'Rate-limit errors were saved as “tried, not found”, so many addresses were never really searched.', 'Separate transient errors from real misses, retry with back-off, re-queue only what isn’t on a building.'],
+    ['Minutes per lookup', 'One overloaded Overpass server, long timeouts, then a global pause.', 'Three servers in rotation, per-server exponential back-off, 20 s timeouts, cached postcodes. Down to 5.5 s.'],
+    ['One click painted a neighbourhood', 'Vector tiles merge whole terraces into one feature.', 'Point-in-polygon selection, parcel clipping, house-number slicing and an area/distance guard.'],
+    ['Borough-shaped holes in the dots', 'Over the 8,000-row cap the query returned rows in load order.', 'A stable hash-ordered sample spread evenly across the viewport.'],
+    ['Map froze during bulk loads', 'A schema check waited on a table lock behind the loader.', 'Check the catalogue first, with a 3 s lock timeout before any change.'],
+  ] as [string, string, string][],
+  data: [
+    'A streaming loader scanned 41.7 million OS Open UPRN rows and kept only the ~4 million near customer postcodes, instead of loading the whole country.',
+    'Land Registry parcels downloaded only for the councils that have a building-level customer.',
+    'Every derived row carries a geocoder or classifier version, so a rule change re-processes only what it affects.',
+  ],
+  limits: [
+    'OSM house numbers are patchy on many UK streets, so about a fifth of customers stay at street level. AddressBase would close most of that gap, but it’s paid.',
+    'Land Registry parcels cover England and Wales only; Scottish shops fall back to slicing or a pin.',
+    'Next: a monthly OSM refresh, Overture Places as an extra prospect source, and route planning for sales visits.',
+  ],
+  privacy: 'Customer names, account codes, counts, locations and financial figures are left out. The map here is an illustration, not real data.',
 }
