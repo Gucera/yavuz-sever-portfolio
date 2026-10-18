@@ -1,0 +1,285 @@
+/* ---------- wholesale ops portal (pale green card, one green accent) ---------- */
+
+.portal {
+  --pg: #1d7a4b;
+  --pg-line: rgba(16, 35, 26, 0.16);
+  /* the customer map illustration and its deep dive */
+  --ukm-purple: #6a59b5;
+  --ukm-lime: #c3dc68;
+  --ukm-line: var(--pg-line);
+}
+.portal .exp__headline,
+.portal .panel__label,
+.portal .card__meta dt,
+.portal .card__next {
+  color: var(--pg);
+}
+.portal .panel,
+.portal .card__meta,
+.portal .card__meta dt,
+.portal .card__meta dd {
+  border-color: var(--pg-line);
+}
+.portal .exp__num {
+  background: var(--pg);
+  color: #fff;
+}
+.portal .cs__features li {
+  background: rgba(255, 255, 255, 0.55);
+}
+.portal .cs__dark {
+  background: #10231a;
+  color: #e6f2e9;
+  border-color: #10231a;
+}
+.portal .cs__dark .panel__label,
+.portal .cs__dark .cs__quote {
+  color: #9fe0b5;
+}
+
+/* screenshots from the public rebuild */
+.pshot {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.pshot a {
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #eef0ee;
+  box-shadow:
+    0 0 0 1px var(--pg-line),
+    0 18px 40px rgba(16, 35, 26, 0.12);
+}
+.pshot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.portal__hero .pshot img {
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px var(--pg-line),
+    0 24px 50px rgba(16, 35, 26, 0.16);
+}
+.pshot--tall img {
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: top;
+}
+.pshot figcaption {
+  font-size: 12.5px;
+  line-height: 1.45;
+  opacity: 0.75;
+}
+
+/* the module index and notes under the problem */
+.portal__index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.portal__index button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--pg-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.portal__index button:hover {
+  background: #fff;
+  border-color: var(--pg);
+}
+.portal__index em {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-style: normal;
+  color: var(--pg);
+}
+.portal__note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  opacity: 0.7;
+}
+
+/* one module */
+.pm {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 26px 0 8px;
+  border-top: 2px solid var(--pg);
+  /* clear of the tab's own address bar when the module index scrolls here */
+  scroll-margin-top: 56px;
+}
+.pm__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 6px 18px;
+}
+.pm__num,
+.pm__scope {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.pm__num {
+  color: var(--pg);
+}
+.pm__scope {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 0 0 1px var(--pg-line);
+  white-space: nowrap;
+}
+.pm__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3.2vw, 46px);
+  font-weight: 400;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.pm__body {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 32px;
+  align-items: start;
+}
+.pm__text {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.pm__text .panel__label {
+  display: block;
+  margin-bottom: 8px;
+}
+.pm__notes {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.pm__notes li::marker {
+  color: var(--pg);
+}
+.pm__stats {
+  list-style: none;
+  margin: 0;
+  padding: 14px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 32px;
+  border-top: 1px solid var(--pg-line);
+}
+.pm__stats li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 220px;
+}
+.pm__stats strong {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 2.4vw, 36px);
+  font-weight: 400;
+  line-height: 1;
+}
+.pm__stats span {
+  font-size: 13px;
+  line-height: 1.35;
+  opacity: 0.75;
+}
+.pm__art,
+.pm__live {
+  min-width: 0;
+}
+.pm__shots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.pm--shell .pm__body {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+.pm__shots--shell {
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
+  align-items: start;
+}
+.pm__shots--shell .pshot:last-child img {
+  max-height: 520px;
+  object-fit: cover;
+  object-position: top;
+}
+
+/* link to the public rebuild */
+.portal__repo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: #10231a;
+  color: #e6f2e9;
+  text-decoration: none;
+}
+.portal__repo span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.portal__repo em {
+  font-style: normal;
+  font-size: 11px;
+  opacity: 0.7;
+}
+.portal__repo b {
+  font-size: 20px;
+  color: #9fe0b5;
+}
+.portal__repo:hover {
+  background: var(--pg);
+}
+
+@media (max-width: 1023px) {
+  .pm__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .pm__head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pm__scope {
+    justify-self: start;
+    white-space: normal;
+  }
+  .pm__shots,
+  .pm__shots--shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

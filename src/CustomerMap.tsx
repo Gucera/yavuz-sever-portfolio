@@ -1,16 +1,9 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { UKMAP, type Tab } from './data'
-import { Details, ProjectSummary } from './ProjectParts'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 
-type Props = {
-  tab: Tab
-  /** true while the tab is open: the map tilts into its 3D clay model */
-  active: boolean
-  meta: ReactNode
-  next: ReactNode
-}
-
-const pad = (i: number) => String(i + 1).padStart(2, '0')
+/**
+ * The customer map module of the Wholesale Ops Portal, drawn: a made-up neighbourhood (not real
+ * data) in 2D that tilts into a 3D clay model, plus the terrace-slicing diagram.
+ */
 
 // ---- an illustrative neighbourhood (made up, not real data) ----
 const W = 640
@@ -158,7 +151,7 @@ function Box({ r, h, tone }: { r: Rect; h: number; tone: 'customer' | 'picked' }
 }
 
 /** The map, drawn: a 2D analytic view that tilts into a 3D clay model when the tab opens. */
-function MapArt({ active }: { active: boolean }) {
+export function MapArt({ active }: { active: boolean }) {
   const [mode, setMode] = useState<'2d' | '3d' | 'uk' | 'street'>('2d')
   const [demo, setDemo] = useState(false)
   const toggleDemo = () => {
@@ -324,7 +317,7 @@ function MapArt({ active }: { active: boolean }) {
 }
 
 /** Small diagram: one OSM polygon for six shops, cut at the house-number bisectors. */
-function Slicing() {
+export function Slicing() {
   return (
     <svg className="ukmap__slice" viewBox="0 0 440 150" role="img" aria-label="A terrace drawn as one building is sliced between house numbers and only the shop's slices are painted">
       <text x="0" y="14" className="t-head">
@@ -350,226 +343,5 @@ function Slicing() {
         </text>
       ))}
     </svg>
-  )
-}
-
-/** UK Customer Map: geospatial full-stack case study. */
-export function UkMapBody({ tab, active, meta, next }: Props) {
-  const a = UKMAP.architecture
-  const node = (key: string, cls: string) => (
-    <div className={`ukm__node ${cls}`}>
-      <strong>{a[key][0]}</strong>
-      <span>{a[key][1]}</span>
-    </div>
-  )
-  const tones = ['b', 's', 'p', 'n']
-
-  return (
-    <div className="edu ukm">
-      <div className="edu__top">
-        <div className="edu__intro">
-          <h3 className="exp__headline" data-reveal>
-            {UKMAP.subtitle}
-          </h3>
-          <p className="card__lead" data-reveal>
-            {tab.description}
-          </p>
-          {meta}
-        </div>
-        <div data-reveal>
-          <MapArt active={active} />
-        </div>
-      </div>
-
-      <ProjectSummary summary={{ ...UKMAP.summary, stats: UKMAP.stats }} />
-
-      <section className="panel" data-reveal>
-        <span className="panel__label">01 · The problem</span>
-        <div className="nisa__cols">
-          {UKMAP.problem.map((p) => (
-            <p key={p} className="cs__text">
-              {p}
-            </p>
-          ))}
-        </div>
-        <ul className="ukm__constraints">
-          {UKMAP.constraints.map(([title, text]) => (
-            <li key={title}>
-              <strong>{title}</strong>
-              <span>{text}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <Details>
-      <section className="panel">
-        <span className="panel__label">02 · One map page, six capabilities</span>
-        <ul className="cs__features">
-          {UKMAP.features.map(([title, text], i) => (
-            <li key={title}>
-              <span className="exp__num">{pad(i)}</span>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <div className="exp__bottom">
-        <section className="panel">
-          <span className="panel__label">03 · From messy address to one building</span>
-          <ol className="ukm__steps">
-            {UKMAP.pipeline.map(([title, text]) => (
-              <li key={title}>
-                <strong>{title}</strong>
-                <span>{text}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-        <section className="panel ukm__result">
-          <span className="panel__label">Result · customer address precision</span>
-          {UKMAP.precision.map(([label, parts]) => (
-            <div key={label} className="ukm__bar-row">
-              <span>{label}</span>
-              <div className="ukm__bar">
-                {parts.map((v, i) => (
-                  <i key={i} className={`ukm__seg ukm__seg--${tones[i]}`} style={{ width: `${v}%` }}>
-                    {v >= 8 ? `${v}%` : ''}
-                  </i>
-                ))}
-              </div>
-            </div>
-          ))}
-          <div className="ukm__legend">
-            <span>
-              <i className="ukm__seg--b" />
-              Building
-            </span>
-            <span>
-              <i className="ukm__seg--s" />
-              Street
-            </span>
-            <span>
-              <i className="ukm__seg--p" />
-              Postcode only
-            </span>
-            <span>
-              <i className="ukm__seg--n" />
-              Not found
-            </span>
-          </div>
-          <p className="cs__text">
-            Most of the old misses had never really been searched: rate-limit errors were being saved as “not found”.
-          </p>
-        </section>
-      </div>
-
-      <section className="panel">
-        <span className="panel__label">04 · Painting one shop, not the whole terrace</span>
-        <div className="ukm__slicing">
-          <div className="ukm__slicing-text">
-            <p className="cs__text">
-              OpenStreetMap often draws a row of twenty terraced shops as one building, and vector tiles can merge same-type buildings into one
-              feature over a kilometre long. The first version painted the whole feature, so picking one shop lit up a neighbourhood. The fix
-              runs in the browser, on tile geometry:
-            </p>
-            <ul className="ukm__list">
-              {UKMAP.slicing.map(([title, text]) => (
-                <li key={title}>
-                  <strong>{title}.</strong> {text}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <Slicing />
-        </div>
-      </section>
-
-      <div className="exp__bottom">
-        <section className="panel">
-          <span className="panel__label">05 · Every independent food shop that isn’t a customer</span>
-          <p className="cs__text">
-            Every UK food business must register with its council, and the Food Standards Agency publishes that register as open data. That
-            became the base list; OpenStreetMap filled the gaps. A pilot on one London borough checked the customer matcher by hand before
-            loading the whole country. A rule-based classifier sorts shops into grocery, European, world food, off-licence, newsagent and
-            specialist, and drops big chains.
-          </p>
-        </section>
-        <section className="panel cs__dark">
-          <span className="panel__label">Drawing ~98k points smoothly</span>
-          <ul className="ukm__zoom">
-            {UKMAP.zoom.map(([z, text]) => (
-              <li key={z}>
-                <b>{z}</b>
-                <span>{text}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
-      <section className="panel">
-        <span className="panel__label">06 · Browser renders, backend resolves, database remembers</span>
-        <div className="ukm__arch">
-          {node('tiles', 'ukm__arch-tiles')}
-          <span className="ukm__arrow ukm__arrow--tiles">↓</span>
-          {node('browser', 'ukm__arch-browser')}
-          <span className="ukm__arrow ukm__arrow--api">⇄</span>
-          {node('api', 'ukm__arch-api')}
-          <span className="ukm__arrow ukm__arrow--open">⇄</span>
-          {node('open', 'ukm__arch-open')}
-          <span className="ukm__arrow ukm__arrow--db">⇅</span>
-          {node('db', 'ukm__arch-db')}
-        </div>
-      </section>
-
-      <section className="panel">
-        <span className="panel__label">07 · What broke, why, and how it was fixed</span>
-        <div className="ukm__table">
-          <div className="ukm__thead">
-            <span>Problem</span>
-            <span>Root cause</span>
-            <span>Fix</span>
-          </div>
-          {UKMAP.challenges.map(([problem, cause, fix]) => (
-            <div key={problem} className="ukm__tr">
-              <strong>{problem}</strong>
-              <span>{cause}</span>
-              <span>{fix}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="exp__bottom">
-        <section className="panel">
-          <span className="panel__label">08 · Large open datasets, loaded only where needed</span>
-          <ul className="cs__impact">
-            {UKMAP.data.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </section>
-        <section className="panel">
-          <span className="panel__label">09 · Limits and next steps</span>
-          <ul className="cs__impact">
-            {UKMAP.limits.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
-      </Details>
-
-      <p className="ukm__privacy" data-reveal>
-        {UKMAP.privacy} Contains OS data © Crown copyright · HM Land Registry data © Crown copyright · FSA data under the Open Government
-        Licence · © OpenStreetMap contributors.
-      </p>
-
-      {next}
-    </div>
   )
 }

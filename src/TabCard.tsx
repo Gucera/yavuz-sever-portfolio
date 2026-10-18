@@ -4,12 +4,10 @@ import type { Tab } from './data'
 import { EducationBody } from './Education'
 import { AboutBody } from './About'
 import { ExperienceBody } from './Experience'
-import { CaseStudyBody } from './CaseStudy'
-import { NisaBody } from './Nisa'
-import { UkMapBody } from './UkMap'
+import { PortalBody } from './Portal'
+import { CatalogueBody } from './Catalogue'
 import { DimarkBody } from './Dimark'
 import { CandyBody } from './Candy'
-import { CASE_STUDIES } from './data'
 import { Icon } from './Icon'
 import { FullContext } from './ProjectParts'
 
@@ -322,12 +320,10 @@ const CardContent = memo(function CardContent({ tab, isOpen, onNext }: { tab: Ta
         <CandyBody tab={tab} active={isOpen} meta={meta} next={next} />
       ) : tab.extra === 'dimark' ? (
         <DimarkBody tab={tab} active={isOpen} meta={meta} next={next} />
-      ) : tab.extra === 'nisa' ? (
-        <NisaBody tab={tab} active={isOpen} meta={meta} next={next} />
-      ) : tab.extra === 'map' ? (
-        <UkMapBody tab={tab} active={isOpen} meta={meta} next={next} />
-      ) : tab.extra === 'case' && CASE_STUDIES[tab.title] ? (
-        <CaseStudyBody tab={tab} study={CASE_STUDIES[tab.title]} active={isOpen} meta={meta} next={next} />
+      ) : tab.extra === 'catalogue' ? (
+        <CatalogueBody tab={tab} active={isOpen} meta={meta} next={next} />
+      ) : tab.extra === 'portal' ? (
+        <PortalBody tab={tab} active={isOpen} meta={meta} next={next} />
       ) : (
         <div className="card__body">
           <div className="card__text">

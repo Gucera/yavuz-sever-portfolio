@@ -36,8 +36,38 @@ test('a tab opens at its own address and closes with its ×', async ({ page }) =
 })
 
 test('a shared link opens that tab straight away', async ({ page }) => {
-  await fresh(page, '/uk-customer-map')
-  await expect(openCard(page).locator('.card__title')).toHaveText('UK Customer Map')
+  await fresh(page, '/wholesale-ops-portal')
+  await expect(openCard(page).locator('.card__title')).toHaveText('Wholesale Ops Portal')
+})
+
+test('old links to the map, Quick Label and Nisa open the portal tab that now holds them', async ({ page }) => {
+  for (const slug of ['uk-customer-map', 'quick-label', 'nisa-automation']) {
+    await fresh(page, `/${slug}`)
+    await expect(openCard(page).locator('.card__title')).toHaveText('Wholesale Ops Portal')
+    await expect(page).toHaveURL(/\/wholesale-ops-portal$/)
+  }
+})
+
+test('the portal tab tells each module with its own illustration', async ({ page }) => {
+  await fresh(page, '/wholesale-ops-portal')
+  const tab = openCard(page)
+  await expect(tab.locator('.pm')).toHaveCount(7) // six modules and the shared shell
+  await expect(tab.locator('#pm-map .ukmap')).toHaveCount(1)
+  await expect(tab.locator('#pm-labels .printer__label')).toHaveCount(1)
+  await expect(tab.locator('#pm-nisa .run__line')).toHaveCount(10)
+  // the module index scrolls to a module, and its animation runs once it's in view
+  await tab.locator('.portal__index button', { hasText: 'Nisa Automation' }).click()
+  await expect(tab.locator('#pm-nisa .run__line').first()).toHaveCSS('opacity', '1')
+  await tab.locator('#pm-labels').scrollIntoViewIfNeeded()
+  await expect(tab.locator('#pm-labels .printer__status')).toHaveText('DONE')
+  // every screenshot is there
+  const broken = await tab.locator('.pshot img').evaluateAll(async (imgs) => {
+    const list = imgs as HTMLImageElement[]
+    for (const img of list) img.loading = 'eager'
+    await Promise.all(list.map((img) => img.decode().catch(() => undefined)))
+    return list.filter((img) => !img.naturalWidth).map((img) => img.src)
+  })
+  expect(broken).toEqual([])
 })
 
 test('the Stack is home; Grid, Cards and Terminal live in the Explore menu, and the choice is remembered', async ({ page }) => {
@@ -70,10 +100,10 @@ test('search opens a tab, and its × closes it, even for a project inside the gr
   await fresh(page)
   await switchView(page, 'Grid')
   await page.getByRole('button', { name: 'Search all tabs' }).click()
-  await page.locator('.spot__input').fill('label')
+  await page.locator('.spot__input').fill('quick label')
   await page.locator('.spot__results button').first().click()
-  await expect(openCard(page).locator('.card__title')).toHaveText('Quick Label')
-  await openCard(page).getByRole('button', { name: 'Close Quick Label' }).click()
+  await expect(openCard(page).locator('.card__title')).toHaveText('Wholesale Ops Portal')
+  await openCard(page).getByRole('button', { name: 'Close Wholesale Ops Portal' }).click()
   await expect(openCard(page)).toHaveCount(0)
 })
 
@@ -127,7 +157,7 @@ test('About ends with a way to get in touch', async ({ page }) => {
 })
 
 test('every project starts with a 3-line summary and folds its technical details', async ({ page }) => {
-  for (const slug of ['quick-label', 'nisa-automation', 'uk-customer-map', 'dimark-online', 'candy-cargo']) {
+  for (const slug of ['wholesale-ops-portal', 'catalogue-maker', 'dimark-online', 'candy-cargo']) {
     await fresh(page, `/${slug}`)
     const tab = openCard(page)
     const summary = tab.locator('.summary')
@@ -145,12 +175,23 @@ test('closed tabs are light: technical details are not rendered until a tab is o
   await fresh(page)
   await expect(page.locator('.more')).toHaveCount(0)
   await expect(page.locator('.uel-badge--flat')).toHaveCount(1) // the crest is a flat picture
-  await card(page, 'Quick Label').dispatchEvent('click')
+  await expect(page.locator('.pm')).toHaveCount(0) // nor are the portal's modules and screenshots
+  await card(page, 'Wholesale Ops Portal').dispatchEvent('click')
   await expect(openCard(page).locator('.more')).toHaveCount(1)
 })
 
-test('the UK map keeps Fit UK and Street view behind a Demo button', async ({ page }) => {
-  await fresh(page, '/uk-customer-map')
+test('Catalogue Maker shows its four tools and an illustrative catalogue beside them', async ({ page }) => {
+  await fresh(page, '/catalogue-maker')
+  const tab = openCard(page)
+  await expect(tab.locator('.card__title')).toHaveText('Catalogue Maker')
+  await expect(tab.locator('.catm__parts > li h3')).toHaveText(['Flyers', 'Focals', 'PDF Extract', 'Compact'])
+  await expect(tab.locator('.catv__page').first()).toBeVisible()
+  await expect(tab.locator('.catv__count')).toHaveText('1 / 212') // reduced motion: it stays on the cover
+  await expect(tab.locator('.catv__note')).toContainText('made-up')
+})
+
+test('the customer map keeps Fit UK and Street view behind a Demo button', async ({ page }) => {
+  await fresh(page, '/wholesale-ops-portal')
   const ctl = openCard(page).locator('.ukmap__ctl')
   await expect(ctl.getByRole('button', { name: 'Fit UK' })).toHaveCount(0)
   await ctl.getByRole('button', { name: 'Demo' }).click()
@@ -176,10 +217,19 @@ test.describe('with motion', () => {
     await page.waitForTimeout(2500) // intro
     await switchView(page, 'Cards')
     await page.waitForTimeout(1800) // flight
-    await card(page, 'Nisa Automation').dispatchEvent('click')
-    await expect(openCard(page).locator('.card__title')).toHaveText('Nisa Automation', { timeout: 6000 })
-    await openCard(page).getByRole('button', { name: 'Close Nisa Automation' }).click()
-    await expect(card(page, 'Nisa Automation')).toHaveClass(/card--table/)
+    await card(page, 'Wholesale Ops Portal').dispatchEvent('click')
+    await expect(openCard(page).locator('.card__title')).toHaveText('Wholesale Ops Portal', { timeout: 6000 })
+    await openCard(page).getByRole('button', { name: 'Close Wholesale Ops Portal' }).click()
+    await expect(card(page, 'Wholesale Ops Portal')).toHaveClass(/card--table/)
+  })
+
+  test('the catalogue turns its own pages while the tab is open', async ({ page }) => {
+    await fresh(page, '/catalogue-maker')
+    const count = openCard(page).locator('.catv__count')
+    await expect(count).toHaveText('1 / 212')
+    await expect(count).not.toHaveText('1 / 212', { timeout: 6000 })
+    const y = await openCard(page).locator('.catv__track').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m42)
+    expect(y).toBeLessThan(0)
   })
 
   test('cards: after a shuffle the hand overlaps in order, About me on top', async ({ page }) => {
@@ -187,7 +237,7 @@ test.describe('with motion', () => {
     await page.waitForTimeout(2500)
     await switchView(page, 'Cards')
     await page.waitForTimeout(1800)
-    await card(page, 'Quick Label').dispatchEvent('click')
+    await card(page, 'Candy Cargo').dispatchEvent('click')
     await expect(openCard(page)).toBeVisible({ timeout: 6000 })
     await page.keyboard.press('Escape')
     await page.waitForTimeout(900)

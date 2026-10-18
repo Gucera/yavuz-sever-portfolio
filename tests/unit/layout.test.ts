@@ -31,15 +31,18 @@ describe('gridGeometry', () => {
       }
       for (let a = 0; a < tiles.length; a++) for (let b = a + 1; b < tiles.length; b++) expect(overlap(tiles[a], tiles[b])).toBe(false)
     })
-    it(`fits all five projects inside the folder at ${vp.w}x${vp.h}`, () => {
-      const geo = gridGeometry(vp, 3, 5, 3)
-      for (let p = 0; p < 5; p++) {
-        const m = geo.mini(p)
-        expect(m.left).toBeGreaterThanOrEqual(geo.folder.left)
-        expect(m.left + m.width).toBeLessThanOrEqual(geo.folder.left + geo.folder.width + 0.5)
-        expect(m.top + m.height).toBeLessThanOrEqual(geo.folder.top + geo.folder.height + 0.5)
-        const b = geo.big(p)
-        expect(b.left + b.width).toBeLessThanOrEqual(geo.panel.left + geo.panel.width + 0.5)
+    it(`fits every project inside the folder at ${vp.w}x${vp.h}`, () => {
+      // four projects today (the portal, Catalogue Maker, Dimark, Candy Cargo); six still has to fit
+      for (const n of [4, 6]) {
+        const geo = gridGeometry(vp, 3, n, 3)
+        for (let p = 0; p < n; p++) {
+          const m = geo.mini(p)
+          expect(m.left).toBeGreaterThanOrEqual(geo.folder.left)
+          expect(m.left + m.width).toBeLessThanOrEqual(geo.folder.left + geo.folder.width + 0.5)
+          expect(m.top + m.height).toBeLessThanOrEqual(geo.folder.top + geo.folder.height + 0.5)
+          const b = geo.big(p)
+          expect(b.left + b.width).toBeLessThanOrEqual(geo.panel.left + geo.panel.width + 0.5)
+        }
       }
     })
   }

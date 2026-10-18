@@ -7,15 +7,22 @@ export const tabSlug = (title: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
 
-/** Path for a tab: /quick-label, or / when no tab is open. */
+/** Path for a tab: /wholesale-ops-portal, or / when no tab is open. */
 export const tabPath = (idx: number) => (TABS[idx] ? `/${tabSlug(TABS[idx].title)}` : '/')
 
+/** Old addresses of projects that now live inside another tab. */
+const MOVED: Record<string, string> = {
+  'quick-label': 'wholesale-ops-portal',
+  'nisa-automation': 'wholesale-ops-portal',
+  'uk-customer-map': 'wholesale-ops-portal',
+}
+
 /**
- * Which tab the address points at. Tabs live at real paths (/quick-label) so analytics
- * report them as separate pages; old #quick-label links still work.
+ * Which tab the address points at. Tabs live at real paths (/wholesale-ops-portal) so analytics
+ * report them as separate pages; old #candy-cargo links still work.
  */
 export const tabFromLocation = () => {
-  const find = (slug: string) => (slug ? TABS.findIndex((t) => tabSlug(t.title) === slug) : -1)
+  const find = (slug: string) => (slug ? TABS.findIndex((t) => tabSlug(t.title) === (MOVED[slug] ?? slug)) : -1)
   const fromPath = find(decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g, '')))
   return fromPath !== -1 ? fromPath : find(decodeURIComponent(location.hash.slice(1)))
 }

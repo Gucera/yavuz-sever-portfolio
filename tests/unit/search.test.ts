@@ -7,8 +7,13 @@ describe('search', () => {
     expect(search('q')).toEqual([])
   })
   it('puts title matches first', () => {
-    const hits = search('label')
-    expect(hits[0].title).toBe('Quick Label')
+    const hits = search('portal')
+    expect(hits[0].title).toBe('Wholesale Ops Portal')
+  })
+  it('finds the modules that now live inside the portal tab', () => {
+    for (const q of ['quick label', 'nisa automation', 'prospect map']) {
+      expect(search(q).map((h) => h.title)).toContain('Wholesale Ops Portal')
+    }
   })
   it('finds words inside a tab and returns a snippet around them', () => {
     const hits = search('playwright')

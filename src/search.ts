@@ -1,4 +1,4 @@
-import { ABOUT, CANDY, CASE_STUDIES, DIMARK, EDUCATION, EXPERIENCE, NISA, TABS, UKMAP, type Tab } from './data'
+import { ABOUT, CANDY, CATALOGUE, DIMARK, EDUCATION, EXPERIENCE, PORTAL, TABS, type Tab } from './data'
 
 /** Every piece of text a tab shows, for the Spotlight search. */
 function textsOf(tab: Tab): string[] {
@@ -6,16 +6,15 @@ function textsOf(tab: Tab): string[] {
     about: ABOUT,
     education: EDUCATION,
     experience: EXPERIENCE,
-    case: CASE_STUDIES[tab.title],
-    nisa: NISA,
-    map: UKMAP,
+    portal: PORTAL,
+    catalogue: CATALOGUE,
     dimark: DIMARK,
     candy: CANDY,
   }
   const out: string[] = [tab.title, tab.kind, tab.description, ...tab.meta.map(([k, v]) => `${k}: ${v}`)]
   const walk = (v: unknown) => {
     if (typeof v === 'string') {
-      if (!/^https?:|^github\.com|^\/assets/.test(v)) out.push(v)
+      if (!/^https?:|^github\.com|^\/assets|\.webp$/.test(v)) out.push(v)
     } else if (typeof v === 'number') out.push(String(v))
     else if (Array.isArray(v)) v.forEach(walk)
     else if (v && typeof v === 'object') Object.values(v).forEach(walk)

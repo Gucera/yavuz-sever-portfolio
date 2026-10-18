@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 /**
- * Street view for the UK Customer Map case study: a first-person walk at eye height down a
+ * Street view for the customer map in the Wholesale Ops Portal tab: a first-person walk at eye height down a
  * made-up high street in the map's "clay model" style. Customer buildings are purple, the
  * selected shop is lime, prospect shops are marked on the pavement. Drag to look, WASD or the
  * arrow keys to walk (while the pointer is over the view), Esc to leave. Illustrative only.

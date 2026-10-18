@@ -16,7 +16,7 @@ export type Tab = {
   /** Labels for the media placeholders: [hero, detail, detail] */
   media: [string, string, string]
   /** Tab-specific layout rendered instead of the default body */
-  extra?: 'about' | 'education' | 'experience' | 'case' | 'nisa' | 'map' | 'dimark' | 'candy'
+  extra?: 'about' | 'education' | 'experience' | 'portal' | 'catalogue' | 'dimark' | 'candy'
   /** Card background / ink colour */
   bg: string
   ink: string
@@ -24,7 +24,7 @@ export type Tab = {
 
 /** Project case studies — collected in a folder in the grid view. */
 export const isProject = (tab: Tab) =>
-  tab.extra === 'case' || tab.extra === 'nisa' || tab.extra === 'map' || tab.extra === 'dimark' || tab.extra === 'candy'
+  tab.extra === 'portal' || tab.extra === 'catalogue' || tab.extra === 'dimark' || tab.extra === 'candy'
 
 export const PROFILE = {
   name: 'Yavuz Selim Sever',
@@ -96,58 +96,40 @@ export const TABS: Tab[] = [
     ink: '#111111',
   },
   {
-    title: 'Quick Label',
-    kind: 'Internal operational software',
+    title: 'Wholesale Ops Portal',
+    kind: 'Internal operations portal',
     year: '2026',
-    url: 'quicklabel.dimark.internal',
+    url: 'ops-portal.internal',
     description:
-      'An internal warehouse system that automates label-required order detection, product matching, print preparation, mobile barcode-triggered printing and pallet traceability.',
+      'The internal portal a London grocery wholesaler runs its day on: the customer map, label printing, supplier-order automation, order processing, credit control and the syncs that feed them, in one place. These are the modules I built or rebuilt inside it.',
     meta: [
-      ['Role', 'Software Developer'],
+      ['Role', 'Software Developer · full-stack'],
       ['Company', 'Dimark Limited'],
-      ['Type', 'Internal Operational Software'],
-      ['Stack', 'Python · FastAPI · Next.js · PostgreSQL · JavaScript · PowerShell'],
+      ['Type', 'Internal operations portal'],
+      ['Stack', 'Next.js · React · FastAPI · PostgreSQL · SQL Server · Playwright · MapLibre GL'],
     ],
-    media: ['project image', 'detail', 'detail'],
-    extra: 'case',
-    bg: '#ff4d1a',
-    ink: '#111111',
+    media: ['portal', 'detail', 'detail'],
+    extra: 'portal',
+    bg: '#dcecdf',
+    ink: '#10231a',
   },
   {
-    title: 'Nisa Automation',
-    kind: 'Order & invoice automation',
+    title: 'Catalogue Maker',
+    kind: 'Print catalogue & PDF tools',
     year: '2026',
-    url: 'nisa-automation.internal',
+    url: 'catalogue-maker.internal',
     description:
-      'A browser-automation system that reads wholesale orders from a supplier portal, validates every line, creates verified internal orders and reconciles invoices, with an operator approving every committing step.',
+      'The tools a London grocery wholesaler uses to turn its product database into a printed A4 catalogue: promotional flyers, product overlays filled from the price list, a page layout rendered in the browser, and a compression step that makes the finished PDF small enough to send.',
     meta: [
-      ['Role', 'Software Developer'],
+      ['Role', 'Software Developer · frontend-focused full-stack'],
       ['Company', 'Dimark Limited'],
-      ['Type', 'Internal Automation'],
-      ['Stack', 'Python · Playwright · FastAPI · Next.js · PostgreSQL · SQL Server'],
+      ['Type', 'Internal catalogue tooling'],
+      ['Stack', 'Next.js · React · TypeScript · PostgreSQL · Cloudflare R2 · pdf-lib · sharp'],
     ],
-    media: ['project image', 'detail', 'detail'],
-    extra: 'nisa',
-    bg: '#1a1a1a',
-    ink: '#c6ff3d',
-  },
-  {
-    title: 'UK Customer Map',
-    kind: 'Geospatial full-stack',
-    year: '2026',
-    url: 'customer-map.internal',
-    description:
-      'A 2D/3D map of Great Britain inside a wholesale distributor’s internal portal. It puts customer shops on their actual building, overlays about 98,000 independent shops that aren’t customers yet, and turns both into region-by-region sales reports, using only free, open UK data.',
-    meta: [
-      ['Role', 'Product design · Full-stack development'],
-      ['Type', 'Internal tool'],
-      ['Stack', 'Next.js · MapLibre GL · FastAPI · PostgreSQL'],
-      ['Data cost', '£0 · open data only'],
-    ],
-    media: ['map', 'detail', 'detail'],
-    extra: 'map',
-    bg: '#ece6da',
-    ink: '#23212b',
+    media: ['catalogue', 'detail', 'detail'],
+    extra: 'catalogue',
+    bg: '#f1e7d6',
+    ink: '#2a1a10',
   },
   {
     title: 'Dimark Online',
@@ -228,180 +210,6 @@ export const EXPERIENCE = {
   work: [
     'During my time at Dimark, I’ve worked on systems across warehouse automation, labelling, supplier-order processing, ecommerce and product discovery.',
     'I keep the technical detail, architecture and engineering decisions inside the individual project case studies.',
-  ],
-}
-
-export type CaseStudy = {
-  subtitle: string
-  summary: Summary
-  /** Repository link printed on the illustrated label (without https://) */
-  repo?: string
-  problem: string[]
-  solution: string[]
-  /** Each flow is a chain of steps; the first is the main workflow */
-  flows: { label: string; steps: string[] }[]
-  features: [title: string, text: string][]
-  challenge: string[]
-  safety: string[]
-  architecture: [layer: string, text: string][]
-  impact: string[]
-  learned: string
-}
-
-export const CASE_STUDIES: Record<string, CaseStudy> = {
-  'Quick Label': {
-    subtitle: 'Warehouse Labelling & Product Tracking System',
-    summary: {
-      problem: 'Labelling was manual: staff worked out which orders needed labels, found the right label and quantity by hand, and sent it to the right printer.',
-      built: 'A system that detects orders needing labels, matches them to label definitions, calculates quantities and prints them in one controlled run, with uncertain cases flagged for review. A phone barcode scan can print a label too.',
-      result: 'Order-driven, reviewable label printing for the whole catalogue instead of product-by-product preparation.',
-      stats: [
-        ['848', 'products'],
-        ['106', 'brands'],
-      ],
-    },
-    repo: 'github.com/Gucera/Quick-Label',
-    problem: [
-      'Product labelling was a repetitive and error-prone warehouse process. Staff had to identify which orders required labels, find the correct product labels, calculate quantities manually and send them to the right printer.',
-      'The process became harder as product data, pack sizes, customer requirements and warehouse workflows became more complex.',
-    ],
-    solution: [
-      'I built Quick Label to turn this manual workflow into a connected operational system.',
-      'The system automatically detects orders that require labels, matches order lines to the correct label definitions, calculates the required quantities and flags uncertain cases for operator review before anything is printed.',
-      'From there, staff can review and print the complete order through a controlled workflow.',
-    ],
-    flows: [
-      {
-        label: 'Order-driven printing',
-        steps: ['Order Data', 'Detection', 'Product Matching', 'Validation', 'Print Job', 'Windows Print Agent', 'Label Printer'],
-      },
-      {
-        label: 'Mobile barcode printing',
-        steps: ['Phone Barcode Scan', 'Product Lookup', 'Print Request', 'Assigned PC', 'Printer'],
-      },
-    ],
-    features: [
-      ['Automatic Order Detection', 'Identifies orders requiring labels from multiple operational data sources.'],
-      ['Product Matching', 'Matches order lines against stored label definitions using product and order data.'],
-      ['Quantity Calculation', 'Handles pack sizes, unit types and partial quantities before printing.'],
-      ['Human Review', 'Flags missing labels, suspicious matches and inconsistent quantities instead of guessing.'],
-      ['Mobile Barcode Printing', 'Allows warehouse staff to scan a barcode from a phone and trigger a label on an assigned printing PC.'],
-      ['Pallet Tracking', 'Creates QR-based pallet records linked to live product and warehouse information.'],
-    ],
-    challenge: [
-      'The biggest challenge was not printing labels. It was making the system reliable when the underlying operational data was imperfect.',
-      'Product descriptions could differ, pack sizes were not always represented consistently, and label instructions could appear in different places. I designed the workflow to fail safely and surface uncertainty rather than silently making assumptions.',
-    ],
-    safety: [
-      'Quick Label was designed around controlled automation rather than blind automation.',
-      'Duplicate imports, uncertain product matches and print-state ambiguity are handled explicitly. If the system cannot verify a result confidently, it requires human confirmation rather than automatically repeating the action.',
-    ],
-    architecture: [
-      ['Mobile', 'Barcode scanning workflow for warehouse staff'],
-      ['Frontend', 'Browser-based operator interface'],
-      ['Backend', 'FastAPI handles order logic, matching, rendering and print jobs'],
-      ['Data layer', 'PostgreSQL mirror of operational data'],
-      ['Printing', 'Short-lived Windows print agent communicates with the thermal printer'],
-    ],
-    impact: [
-      'Supports a large internal product-label catalogue',
-      'Reduced manual product-by-product label preparation',
-      'Centralised order-driven label processing',
-      'Enabled barcode-triggered warehouse printing',
-      'Improved visibility through pallet-linked QR records',
-    ],
-    learned:
-      'Quick Label changed the way I think about automation. A system is not reliable simply because it completes a task quickly. In operational software, reliability also means understanding uncertainty, preventing duplicate actions, exposing failure states and giving users control when the software cannot safely decide on its own.',
-  },
-}
-
-export const NISA = {
-  subtitle: 'Wholesale Order & Invoice Automation',
-  summary: {
-    problem: 'Orders from a supplier portal with no API were copied, reshaped and retyped by hand, then every invoice was corrected line by line.',
-    built: 'A browser-automation system that reads and validates each order, creates a verified internal order and reconciles the invoice, with an operator approving every committing step.',
-    result: 'Far less manual order entry, validated orders with duplicate protection, and invoice submission kept in human hands.',
-    stats: [
-      ['50+', 'lines per order, no longer retyped'],
-      ['0', 'committing steps without operator approval'],
-    ],
-  } as Summary,
-  demoRepo: 'github.com/Gucera/retail-order-automation',
-  runLog: [
-    ['run', '3 orders selected by operator'],
-    ['ok', 'order extracted · 53 lines'],
-    ['ok', 'codes, quantities and prices validated'],
-    ['wait', 'awaiting operator approval'],
-    ['ok', 'approved · duplicate check passed'],
-    ['ok', 'internal order created'],
-    ['ok', 'read-back matches source'],
-    ['ok', 'invoice reconciled · Δ £0.00'],
-    ['stop', 'send invoice → human action'],
-  ] as [kind: 'run' | 'ok' | 'wait' | 'stop', text: string][],
-  problem: [
-    'Wholesale orders arrived through a supplier portal with no usable API. Staff copied each order by hand, reshaped it in a spreadsheet and retyped it into the internal order system — often 50+ lines per order.',
-    'After delivery, every invoice draft had to be corrected line by line to match what actually left the warehouse. Slow, repetitive and easy to get wrong on a large account.',
-  ],
-  before: [
-    'Copy the order out of the supplier portal',
-    'Paste into a spreadsheet and split the columns',
-    'Retype 50+ lines into the internal system',
-    'Fix each invoice draft line by line',
-    'Check totals by eye',
-  ],
-  after: [
-    'Operator selects the orders to process',
-    'Worker reads and validates every line',
-    'Order created, then read back and compared',
-    'Invoice draft reconciled to real fulfilment',
-    'Final invoice submission stays human',
-  ],
-  flows: [
-    {
-      label: 'Order automation',
-      steps: ['Supplier Portal', 'Order Extraction', 'Validation', 'Operator Approval', 'Internal Order Creation', 'Read-back Verification'],
-    },
-    {
-      label: 'Invoice reconciliation',
-      steps: ['Draft Invoice', 'Actual Fulfilment Data', 'Difference Detection', 'Corrections', 'Validation', 'Human Review'],
-    },
-  ],
-  principles: [
-    ['Fail Closed', 'If critical data is missing, ambiguous or inconsistent, the automation stops instead of guessing.'],
-    ['Human Authorisation', 'Only explicitly selected and approved orders are allowed to reach committing actions.'],
-    ['Duplicate Protection', 'Multiple safeguards prevent the same order from being processed twice.'],
-    ['Read-back Verification', 'After order creation, the system re-reads the result and compares it with the original source.'],
-    ['Controlled Invoicing', 'The system can prepare and reconcile invoice data, while the final invoice submission remains a human action.'],
-  ] as [string, string][],
-  architecture: {
-    frontend: ['Frontend', 'Next.js interface for order selection, status and review'],
-    backend: ['Backend', 'FastAPI service orchestrating automation runs and application logic'],
-    worker: ['Automation Worker', 'Python + Playwright controlling the supplier portal in a separate worker process'],
-    data: ['Operational Data', 'PostgreSQL for automation records and SQL Server for internal order/invoice data'],
-    events: ['Run Events', 'Structured run output used for monitoring, auditing and recovery'],
-  } as Record<string, [string, string]>,
-  challenge: [
-    'The hardest part was making automation trustworthy.',
-    'Third-party portals can change, operational data is not always perfectly clean, and a browser action reporting success does not always mean the intended business action actually happened.',
-    'I designed the workflow so every important step is validated independently. Instead of trusting the interface, the system verifies the underlying result and blocks the workflow when something cannot be confirmed.',
-  ],
-  safety: [
-    'The system was designed around the assumption that external interfaces, user data and operational state can all be imperfect.',
-    'Because of this, important actions are protected through operator approval, duplicate checks, validation rules, controlled write paths and explicit failure states.',
-  ],
-  safetyLine: 'The goal was not maximum automation. The goal was safe automation.',
-  impact: [
-    'Reduced repetitive manual order-entry work',
-    'Standardised validation of incoming wholesale orders',
-    'Added duplicate protection and read-back verification',
-    'Reduced manual effort during invoice reconciliation',
-    'Improved visibility into automation runs and failure states',
-    'Preserved human control over high-risk actions',
-  ],
-  learned: [
-    'This project taught me that automation becomes much more interesting when software is responsible for real operational decisions.',
-    'Building the browser automation itself was only one part of the challenge. The harder problem was deciding what the system should trust, what it should verify, and when it should stop.',
-    'It reinforced the importance of validation, idempotency, auditability and human oversight when integrating software with real business processes.',
   ],
 }
 
@@ -641,89 +449,418 @@ export const INCOGNITO = {
   hint: 'Want the tabs back? Press “undo” at the bottom of the screen, or reload the page.',
 }
 
+export type PortalModule = {
+  /** anchor and art key */
+  id: 'map' | 'labels' | 'nisa' | 'orders' | 'credit' | 'sync'
+  name: string
+  /** my part of this module on the real portal */
+  scope: string
+  problem: string
+  built: string[]
+  notes: string[]
+  stats?: [value: string, label: string][]
+  /** screenshots from the public rebuild: [file in /assets/portal, caption] */
+  shots: [file: string, caption: string][]
+}
+
 /**
- * UK Customer Map. Customer names, account codes, counts, locations and figures are left out on
- * purpose (internal data); percentages and open-data figures only. The map art is illustrative.
+ * Wholesale Ops Portal: one page for the internal portal and the modules inside it (the map,
+ * Quick Label and Nisa used to be three separate tabs). Customer names, account codes and
+ * amounts from the real system are left out on purpose; the screenshots are of the public
+ * rebuild, whose company and data are invented.
  */
-export const UKMAP = {
-  subtitle: 'Customer & Prospect Map',
+export const PORTAL = {
+  subtitle: 'One portal for a wholesaler’s day',
   summary: {
-    problem: 'Thousands of customers existed only as messy free-text addresses, so sales had no picture of where customers were or which nearby shops weren’t buying yet.',
-    built: 'A 2D/3D map inside the internal portal: a geocoding pipeline that places shops on their exact building, a layer of independent prospect shops, and region and sales-rep reports exported to Excel.',
-    result: 'Most customers now sit on their own building, lookups take seconds, and it all runs on free, open UK data.',
+    problem:
+      'Each step of the business lived in a different tool: storefront orders that didn’t match what was picked, labels made by hand, supplier orders retyped from a portal, credit checked against ledger exports, and no picture of where customers were.',
+    built:
+      'Six modules inside one internal portal, on the same shared components: a customer and prospect map, label printing, supplier-order and invoice automation, the order processor, credit-control messaging, and the sync studio that feeds them all.',
+    result:
+      'The day’s operational work in one place, with a named person approving every step that touches stock or a customer’s money.',
+    stats: [
+      ['6', 'modules in one portal'],
+      ['0', 'committing steps without a person approving'],
+    ],
   } as Summary,
-  stats: [
-    ['22% → 68%', 'of customer shops placed on their exact building'],
-    ['94%', 'of building-level shops matched to a Land Registry parcel'],
-    ['~98k', 'independent prospect shops loaded across the UK'],
-    ['5.5 s', 'average lookup per address, down from several minutes'],
-  ] as [string, string][],
+  rebuild: 'github.com/Gucera/Wholesale-Ops-Portal',
+  rebuildNote:
+    'The real portal is internal. The screenshots on this page come from Brambleway Ops, my public rebuild of the same modules on the same stack, around a fictional company with entirely generated data.',
   problem: [
-    'The business sells groceries to small independent shops all over the UK. Its customer records only held free-text addresses typed in over many years: shop names mixed into street lines, unit numbers like “2C-1”, misspellings, and postal towns that aren’t the place the shop is actually in.',
-    'Sales staff couldn’t see where customers clustered, which areas were under-served, or which shops nearby weren’t buying yet. The goal: a map a rep can open, fly to a street, click a building and see that shop’s account, plus every potential customer we weren’t reaching.',
+    'A food wholesaler sells to hundreds of independent shops: grocers, off-licences, European and world-food stores. Orders come in through an online storefront and a supplier portal, get picked in the warehouse against the ERP, go out on the company’s own vans, and are paid on account, by card or cash on drop.',
+    'Each step lived in a different tool, fed by jobs that mirror the ERP. The portal pulls that work into one place, with one look, and keeps a person in charge of every step that touches stock or money.',
   ],
-  constraints: [
-    ['No paid data', 'Royal Mail PAF, OS AddressBase and Google Places were ruled out on cost or licence terms.'],
-    ['Core data is read-only', 'Business tables couldn’t change. Everything the map needs lives in its own tables.'],
-    ['Development data only', 'All customer data came from a mirrored database, never the live trading system.'],
+  modules: [
+    {
+      id: 'map',
+      name: 'Customer & prospect map',
+      scope: 'Built end to end',
+      problem:
+        'Thousands of customers existed only as messy free-text addresses. Sales reps planned visits from memory, with no picture of where customers clustered or which nearby shops weren’t buying yet.',
+      built: [
+        'Every customer geocoded once and placed on its own building, searchable by name, address or postcode',
+        'A prospects layer of independent food shops from open data: a heatmap when zoomed out, dots and buildings when zoomed in',
+        'A 2D analytic view, a 3D clay model and a first-person street view',
+        'Region and sales-rep reports, exported to Excel',
+      ],
+      notes: [
+        'Free, open UK data only: no paid address or places APIs',
+        'Terraces are sliced at house-number bisectors, so one click paints one shop',
+        'A stable hash-ordered sample keeps dots from flickering while panning',
+      ],
+      stats: [
+        ['22% → 68%', 'of customer shops placed on their exact building'],
+        ['5.5 s', 'average lookup per address, down from several minutes'],
+      ],
+      shots: [
+        ['map-3d-dark.webp', '3D mode in the rebuild: columns show where shops that aren’t customers cluster, dots are customers coloured by payment status.'],
+        ['map-london.webp', 'Zoomed in, individual prospects appear, coloured by shop type.'],
+      ],
+    },
+    {
+      id: 'labels',
+      name: 'Quick Label',
+      scope: 'Built end to end',
+      problem:
+        'Some shops ask for their stock to arrive labelled. Staff worked out which orders needed labels, found the right label and quantity by hand, and sent it to the right printer.',
+      built: [
+        'Orders that need labels detected and matched to the label library, with counts worked out per case',
+        'Missing labels, uncertain matches and odd quantities flagged for review before anything prints',
+        'Single labels by search, or by scanning a barcode with a phone',
+        'A print queue that follows each job to the warehouse PC, plus QR-linked pallet records',
+      ],
+      notes: [
+        'Browsers can’t drive a thermal printer reliably, so a small Windows helper on each PC claims jobs and reports every stage',
+        'Printer errors become instructions, like “media out: load a new roll”',
+        'When a print result can’t be confirmed, it asks a person instead of printing again',
+      ],
+      stats: [
+        ['848', 'products in the label library'],
+        ['106', 'brands'],
+      ],
+      shots: [
+        ['quick-label-printing.webp', 'An order matched to the label library, previewed at real proportions and printed, with the job’s timeline on the warehouse PC.'],
+        ['single-label.webp', 'Single labels by search or barcode scan.'],
+      ],
+    },
+    {
+      id: 'nisa',
+      name: 'Nisa Automation',
+      scope: 'Built',
+      problem:
+        'Orders from a supplier portal with no API were copied out, reshaped in a spreadsheet and retyped into the internal system, often 50+ lines each. Every invoice draft was then corrected line by line to match what actually left the warehouse.',
+      built: [
+        'A Python and Playwright worker that reads each order the operator selects and validates every line',
+        'Internal orders created only after approval, then read back and compared with the source',
+        'Invoice drafts reconciled to real fulfilment and saved only when the totals match the ERP',
+        'The final “send invoice” step left to a person, on purpose',
+      ],
+      notes: [
+        'Fail closed: missing, ambiguous or inconsistent data stops the run instead of guessing',
+        'Duplicate protection on every committing step',
+        'A browser reporting success isn’t trusted; the result is re-read and checked',
+      ],
+      stats: [
+        ['50+', 'lines per order, no longer retyped'],
+      ],
+      shots: [],
+    },
+    {
+      id: 'orders',
+      name: 'Order processor',
+      scope: 'Frontend redesign · refunds list',
+      problem:
+        'The warehouse picks what’s on the shelf, not what was ordered. Someone had to edit each storefront order by hand so the customer was charged for what actually left the building.',
+      built: [
+        'Split a single 1,900-line page into five routed views with a side menu and shared state, keeping the existing API unchanged',
+        'A refunds-to-issue list: paid, shipped orders whose lines were removed, with the refund due including VAT',
+      ],
+      notes: [
+        'Each order line is compared between the ERP pick and the storefront, and every edit is planned before it’s applied',
+        'One failing order never stops a batch',
+        'Refunds are listed, never issued automatically, and what was already refunded is subtracted',
+      ],
+      shots: [
+        ['order-processor.webp', 'The rebuild’s processor: queue, status filters, the selected order’s line-by-line diff and the refunds still to issue.'],
+        ['refunds.webp', 'Removed minus already refunded, so a partial refund is never paid twice.'],
+      ],
+    },
+    {
+      id: 'credit',
+      name: 'Credit Control & approved messages',
+      scope: 'Frontend rebuild · customer messaging',
+      problem:
+        'The credit team’s real question was “who should I call before the van leaves?” Answering it meant cross-checking ledger exports against the day’s delivery sheets.',
+      built: [
+        'Most of the Credit Control frontend rebuilt on shared cards and design tokens, keeping its data and behaviour',
+        'Account-balance WhatsApp messages with a pay-now link, previewed exactly before sending',
+        'Today’s deliveries: each van’s drops with balances and alerts',
+      ],
+      notes: [
+        'Nothing is sent until a named person approves it',
+        'Accounts in credit are skipped, and an open payment link is reused instead of creating another',
+        'Risk is shown as one plain-words label per account (“buying, not paying”), not a score',
+      ],
+      shots: [
+        ['credit-overview.webp', 'Credit Control overview in the rebuild. Every name and amount is generated.'],
+        ['message-review.webp', 'The review step: each message exactly as it will arrive, a confirmation tick and the approver’s name.'],
+      ],
+    },
+    {
+      id: 'sync',
+      name: 'Sync studio',
+      scope: 'Moved onto the shared components',
+      problem:
+        'Every other module reads data mirrored from the ERP. When a mirror job failed, nobody could see which step broke, what it had already written, or whether it was safe to run again.',
+      built: [
+        'The studio’s pages moved onto the portal’s shared components: each job drawn as a chain of stages, a terminal for the run’s log, and run history with retry',
+      ],
+      notes: [
+        'The sync platform existed before I joined. The public rebuild also implements the engine, so the ideas can be read and run',
+        'In the rebuild, one live run per job is enforced by a partial unique index, and a retry resumes from the stage that failed',
+      ],
+      shots: [
+        ['sync-failed.webp', 'A six-stage product job in the rebuild. Stage 3 stopped on bad ERP data; earlier stages are kept, later ones skipped, and the terminal shows why.'],
+        ['sync-runs.webp', 'Run history across every job: how far each run got, how long it took and what it wrote.'],
+      ],
+    },
+  ] as PortalModule[],
+  shell: {
+    text: 'Every module sits on the same shared components and CSS tokens: cards, badges, tables, a dialog, toasts, and the same loading, empty and error states, so dark mode is a token swap and every page fails the same way. A Ctrl K switcher jumps to any page, customer, order or product.',
+    shots: [
+      ['switcher.webp', 'Ctrl K jumps to any page, customer, order or product.'],
+      ['mobile-deliveries.webp', 'Phone width.'],
+    ] as [string, string][],
+  },
+  architecture: [
+    ['Frontend', 'Next.js App Router and React: one shell, a side menu per module, MapLibre GL for the map'],
+    ['Backend', 'FastAPI with Pydantic: order logic, matching, geocoding, reports and print jobs'],
+    ['Data', 'PostgreSQL for the portal’s own tables and the ERP mirror; SQL Server for the ERP itself'],
+    ['Automation', 'A Python and Playwright worker for the supplier portal, in its own process'],
+    ['Warehouse', 'A Windows print helper on each PC that claims label jobs and drives the thermal printer'],
+    ['Integrations', 'Shopify GraphQL, WhatsApp Cloud API, payment links, and open UK geodata'],
   ] as [string, string][],
-  features: [
-    ['2D analytic + 3D clay model', 'A calm 2D basemap for data, and a 3D mode that tilts the camera to 55° and raises buildings as white blocks, like an architect’s model.'],
-    ['Customers on their building', 'Every customer is geocoded once and cached. Search by name, address or postcode flies to the shop and paints its building.'],
-    ['Prospects layer', '~98,000 independent food shops that aren’t customers, sorted by type. A heatmap at country scale turns into dots and painted buildings as you zoom in.'],
-    ['Street view walking mode', 'First person at 1.8 m eye height inside the 3D model: WASD to walk, drag to look, click a spot to walk there.'],
-    ['Sales reports by region and rep', 'Customer counts, 30/90-day sales with change, balances and overdue debt, exported as an Excel workbook with native charts.'],
-    ['Market-share reports', 'For any region: unserved shops by type, ward and postcode district, and our share of the local market.'],
+  decisions: [
+    ['A person approves every committing step', 'Orders, invoices, messages and refunds are prepared by software and confirmed by a named person. The goal was safe automation, not maximum automation.'],
+    ['Fail closed, and say why', 'When data is missing or ambiguous, the run stops before writing and shows the reason in plain words, rather than guessing.'],
+    ['Verify the result, not the click', 'After an order is created, it is read back and compared with the source; invoices are saved only when totals match the ERP.'],
+    ['Print through a helper', 'A helper on the warehouse PC claims jobs and reports each stage, and the page turns printer errors into instructions.'],
+    ['Open map data, no API keys', 'MapLibre and open UK datasets instead of Google or Mapbox: no per-load billing, and Google’s terms forbid storing the place results a prospect layer needs.'],
+    ['Refunds are listed, not issued', 'The processor records what is owed; a person issues it in the payment provider.'],
   ] as [string, string][],
-  pipeline: [
-    ['Postcode centres first', 'Every postcode is resolved in bulk, so all customers appear on the map at once while slower building lookups run in the background.'],
-    ['Parse the address', 'Split out shop name, premise, house number or range (“539–541”), street, locality and postal town; expand abbreviations.'],
-    ['Ordered search attempts', 'Up to eight query shapes against Nominatim, from structured street + postcode to street-only, duplicates removed.'],
-    ['Validate every hit', 'Within 2.5 km of the postcode, street similarity ≥ 0.85, house number must match. Only then does it count as a building.'],
-    ['Fuzzy fallback', 'Nearby streets and numbers from Overpass are fuzzy-matched, which is how “Kingsly Road” becomes “Kingsley Road”.'],
-    ['EPC → UPRN → coordinates', 'The government EPC register maps address text to a property’s UPRN, placed with OS Open UPRN coordinates.'],
-    ['Parcel assignment', 'Building-level points are matched to their HM Land Registry parcel, which is what lets the map cut a terrace down to one shop.'],
-  ] as [string, string][],
-  // share of customer addresses at each precision, first run vs. pipeline v2
-  precision: [
-    ['First run', [22, 21, 55, 2]],
-    ['Pipeline v2', [68, 21, 9, 2]],
-  ] as [string, [number, number, number, number]][],
-  slicing: [
-    ['Point-in-polygon', 'Only the one polygon that contains the address point is used, never the whole tile feature.'],
-    ['Parcel clipping', 'When the shop has its own Land Registry parcel, the building is clipped to it.'],
-    ['House-number slicing', 'Otherwise the terrace is cut at bisectors between house-number labels and only the shop’s slice is painted.'],
-    ['Safety guard', 'Too big or too far from the address? Show a pin and a ground ring instead. Wrong paint is worse than no paint.'],
-  ] as [string, string][],
-  zoom: [
-    ['Below z10', 'heatmap from a cached grid count'],
-    ['z10+', 'dots for the viewport, a stable sample of up to 8,000'],
-    ['z14+', 'prospect shops painted on their building'],
-    ['z16+', 'shops on screen queued for building-level lookup'],
-  ] as [string, string][],
-  architecture: {
-    browser: ['Browser', 'Next.js + MapLibre GL: rendering, layers, terrace slicing, street view'],
-    api: ['FastAPI backend', 'Address parser, geocoder, background workers, rate limits, reports, Excel export'],
-    db: ['PostgreSQL', 'Read-only customer mirror + map-owned tables: geocodes, parcels, prospects'],
-    tiles: ['Vector tiles', 'OpenFreeMap: OSM buildings, heights, house numbers · no API key'],
-    open: ['Open UK data', 'Nominatim · Overpass · postcodes.io · EPC · OS Open UPRN · HMLR INSPIRE · FSA'],
-  } as Record<string, [string, string]>,
-  challenges: [
-    ['Most customers stuck at postcode level', 'Rate-limit errors were saved as “tried, not found”, so many addresses were never really searched.', 'Separate transient errors from real misses, retry with back-off, re-queue only what isn’t on a building.'],
-    ['Minutes per lookup', 'One overloaded Overpass server, long timeouts, then a global pause.', 'Three servers in rotation, per-server exponential back-off, 20 s timeouts, cached postcodes. Down to 5.5 s.'],
-    ['One click painted a neighbourhood', 'Vector tiles merge whole terraces into one feature.', 'Point-in-polygon selection, parcel clipping, house-number slicing and an area/distance guard.'],
-    ['Borough-shaped holes in the dots', 'Over the 8,000-row cap the query returned rows in load order.', 'A stable hash-ordered sample spread evenly across the viewport.'],
-    ['Map froze during bulk loads', 'A schema check waited on a table lock behind the loader.', 'Check the catalogue first, with a 3 s lock timeout before any change.'],
+  // ---- deep dives, from the old separate pages ----
+  map: {
+    pipeline: [
+      ['Postcode centres first', 'Every postcode is resolved in bulk, so all customers appear on the map at once while slower building lookups run in the background.'],
+      ['Parse the address', 'Split out shop name, premise, house number or range (“539–541”), street, locality and postal town; expand abbreviations.'],
+      ['Ordered search attempts', 'Up to eight query shapes against Nominatim, from structured street + postcode to street-only, duplicates removed.'],
+      ['Validate every hit', 'Within 2.5 km of the postcode, street similarity ≥ 0.85, house number must match. Only then does it count as a building.'],
+      ['Fuzzy fallback', 'Nearby streets and numbers from Overpass are fuzzy-matched, which is how “Kingsly Road” becomes “Kingsley Road”.'],
+      ['EPC → UPRN → coordinates', 'The government EPC register maps address text to a property’s UPRN, placed with OS Open UPRN coordinates.'],
+      ['Parcel assignment', 'Building-level points are matched to their HM Land Registry parcel, which is what lets the map cut a terrace down to one shop.'],
+    ] as [string, string][],
+    // share of customer addresses at each precision, first run vs. pipeline v2
+    precision: [
+      ['First run', [22, 21, 55, 2]],
+      ['Pipeline v2', [68, 21, 9, 2]],
+    ] as [string, [number, number, number, number]][],
+    slicing: [
+      ['Point-in-polygon', 'Only the one polygon that contains the address point is used, never the whole tile feature.'],
+      ['Parcel clipping', 'When the shop has its own Land Registry parcel, the building is clipped to it.'],
+      ['House-number slicing', 'Otherwise the terrace is cut at bisectors between house-number labels and only the shop’s slice is painted.'],
+      ['Safety guard', 'Too big or too far from the address? Show a pin and a ground ring instead. Wrong paint is worse than no paint.'],
+    ] as [string, string][],
+    challenges: [
+      ['Most customers stuck at postcode level', 'Rate-limit errors were saved as “tried, not found”, so many addresses were never really searched.', 'Separate transient errors from real misses, retry with back-off, re-queue only what isn’t on a building.'],
+      ['Minutes per lookup', 'One overloaded Overpass server, long timeouts, then a global pause.', 'Three servers in rotation, per-server exponential back-off, 20 s timeouts, cached postcodes. Down to 5.5 s.'],
+      ['One click painted a neighbourhood', 'Vector tiles merge whole terraces into one feature.', 'Point-in-polygon selection, parcel clipping, house-number slicing and an area/distance guard.'],
+      ['Holes in the dots', 'Over the row cap, the query returned rows in load order.', 'A stable hash-ordered sample spread evenly across the viewport.'],
+      ['Map froze during bulk loads', 'A schema check waited on a table lock behind the loader.', 'Check the catalogue first, with a 3 s lock timeout before any change.'],
+    ] as [string, string, string][],
+  },
+  labels: {
+    repo: 'github.com/Gucera/Quick-Label',
+    flows: [
+      { label: 'Order-driven printing', steps: ['Order Data', 'Detection', 'Product Matching', 'Validation', 'Print Job', 'Windows Print Agent', 'Label Printer'] },
+      { label: 'Mobile barcode printing', steps: ['Phone Barcode Scan', 'Product Lookup', 'Print Request', 'Assigned PC', 'Printer'] },
+    ],
+  },
+  nisa: {
+    demoRepo: 'github.com/Gucera/retail-order-automation',
+    runLog: [
+      ['run', '3 orders selected by operator'],
+      ['ok', 'order extracted · 53 lines'],
+      ['ok', 'codes, quantities and prices validated'],
+      ['wait', 'awaiting operator approval'],
+      ['ok', 'approved · duplicate check passed'],
+      ['ok', 'internal order created'],
+      ['ok', 'read-back matches source'],
+      ['ok', 'invoice reconciled · Δ £0.00'],
+      ['stop', 'send invoice → human action'],
+    ] as [kind: 'run' | 'ok' | 'wait' | 'stop', text: string][],
+    flows: [
+      { label: 'Order automation', steps: ['Supplier Portal', 'Order Extraction', 'Validation', 'Operator Approval', 'Internal Order Creation', 'Read-back Verification'] },
+      { label: 'Invoice reconciliation', steps: ['Draft Invoice', 'Actual Fulfilment Data', 'Difference Detection', 'Corrections', 'Validation', 'Human Review'] },
+    ],
+  },
+  orderCases: [
+    ['Quantity mismatch', 'Picked a different quantity', 'Sets the storefront quantity to what was picked'],
+    ['Price drift', 'Same item, different price', 'Sets the storefront price to the ERP price'],
+    ['Out of stock', 'Ordered but nothing picked', 'Removes the line and lists it as an edge case; a refund is due on card orders'],
+    ['Missing online', 'Picked but not ordered online', 'Adds the line'],
+    ['Missing in ERP', 'Paid for online but never picked', 'Removes the line and lists it for a person to check'],
   ] as [string, string, string][],
-  data: [
-    'A streaming loader scanned 41.7 million OS Open UPRN rows and kept only the ~4 million near customer postcodes, instead of loading the whole country.',
-    'Land Registry parcels downloaded only for the councils that have a building-level customer.',
-    'Every derived row carries a geocoder or classifier version, so a rule change re-processes only what it affects.',
+  before: [
+    'Storefront orders edited line by line after picking',
+    'Label counts worked out per product, printing with no feedback',
+    'Supplier orders retyped line by line, invoices fixed by hand',
+    'Ledger exports cross-checked against delivery sheets',
+    'Customer locations known only to the reps who visit them',
+  ],
+  after: [
+    'Every order edit planned, a refunds list with what is still due',
+    'Labels counted, previewed and tracked to the printer',
+    'Supplier orders validated, approved, created and read back',
+    'Today’s vans with each shop’s balance, and approved messages',
+    'Customers and prospects on one map, with reports per region',
+  ],
+  role: [
+    'I’m a junior full-stack developer in a two-person development team. On the real portal I built the customer map, Quick Label and the Nisa automation, rebuilt most of the Credit Control frontend and added its customer messaging, redesigned the order processor’s frontend and the shared components, and moved the Sync studio onto them.',
+    'The platform itself, and parts of each module’s backend, existed before me or were written with my development manager, who reviews my pull requests. I work with an AI coding assistant and treat its output like any other code: I direct it, read it, test it and own the result.',
+  ],
+  next: [
+    'A real spatial index for the map’s viewport queries',
+    'Automated browser tests for the main flows: process a batch, print an order, approve a message run',
+    'Server-side label rendering, so the preview and the print are the same bytes',
+  ],
+  learned:
+    'Building the automation was the easy half. The harder question in every module was what the software should trust, what it should verify, and when it should stop and hand the decision to a person.',
+  privacy:
+    'Customer names, account codes, counts and amounts from the real system are left out. The map illustration is made up, and every name and figure in the screenshots is generated.',
+}
+
+export type CataloguePart = {
+  id: 'flyers' | 'focals' | 'extract' | 'compact'
+  name: string
+  /** what it does, in a few words */
+  tag: string
+  text: string
+  built: string[]
+}
+
+/**
+ * Catalogue Maker: the catalogue tools inside the wholesaler's internal portal. Copy follows the
+ * full-stack audit (2026-10-17): no measured-speed or hours-saved claims, the ~300 MB → ~30 MB
+ * figure is the developer's own, and the October 2026 work is described as AI-assisted.
+ */
+export const CATALOGUE = {
+  subtitle: 'From product database to a printable catalogue',
+  summary: {
+    problem:
+      'A trade catalogue of around 2,500 products runs to 200+ A4 pages, with promotional flyers between the sections. Laying it out took manual work, and the exported PDF came to about 300 MB: too big to email or share.',
+    built:
+      'Four connected parts of the catalogue maker: Flyers (the promotional posters), Focals (product overlays filled from the price list), PDF Extract (the A4 layout, rendered in the browser) and Compact (server-side PDF compression).',
+    result: 'The catalogue is laid out from the database, and Compact takes a typical catalogue PDF from about 300 MB to about 30 MB without touching text or vector graphics.',
+    stats: [
+      ['~2,500', 'products in one catalogue'],
+      ['200+', 'A4 pages'],
+      ['~300 → ~30 MB', 'catalogue PDF after Compact'],
+      ['4', 'connected tools'],
+    ],
+  } satisfies Summary,
+  context:
+    'The wholesaler prints a catalogue for the independent shops it supplies: every product with its photo, pack size and price, grouped by category, with full-page promotional flyers in between. The products and prices already live in PostgreSQL, fed from the ERP, and the images and finished PDFs are kept in Cloudflare R2.',
+  parts: [
+    {
+      id: 'flyers',
+      name: 'Flyers',
+      tag: 'Promotional posters inside the catalogue',
+      text: 'A4 promotional posters that sit between the catalogue’s sections, stored in their own R2 bucket.',
+      built: [
+        'Upload from the computer with safe file names that never overwrite an existing flyer',
+        'A flyer library with soft delete and restore, and a guard that blocks deleting a flyer a catalogue still uses',
+        'A warning on flyers that feature products suspended in the ERP, worked out in SQL',
+      ],
+    },
+    {
+      id: 'focals',
+      name: 'Focals',
+      tag: 'Product overlays on a flyer',
+      text: 'Staff place product boxes on a flyer: name, units, price, SKU and a QR code, all from database records.',
+      built: [
+        'Pick a SKU and the overlay fills name, units and prices from the price list',
+        'Drag and resize with Pointer Events, snapping guides and layout presets',
+        'Positions stored as 0–1 coordinates, so an overlay lands in the same place at any resolution',
+        'A 40-step undo and redo history, keyboard shortcuts and an unsaved-changes guard',
+      ],
+    },
+    {
+      id: 'extract',
+      name: 'PDF Extract',
+      tag: 'The A4 catalogue, laid out in the browser',
+      text: 'The whole catalogue rendered as A4 pages in the browser and printed to PDF, with a sidebar to configure it.',
+      built: [
+        'Page geometry in millimetres, with print CSS for an exact A4 result',
+        'Page packing that lets small subcategories share a page and continue overleaf',
+        'A page sequence for cover, contents, flyers, category covers and inserts, and a contents page numbered from it',
+        'Grid, margins, bands, fonts and filters saved as versioned settings with debounced autosave',
+        'A queued photo loader with retries, and a report that tells missing photos from failed downloads',
+      ],
+    },
+    {
+      id: 'compact',
+      name: 'Compact',
+      tag: 'Shrinking the finished PDF',
+      text: 'A server-side service that recompresses each photo to the size it is actually printed at.',
+      built: [
+        'Browser upload with progress, to an authenticated route that checks the PDF signature and size',
+        'Reads each image’s drawn size from the PDF content streams, then resamples it with pdf-lib and sharp',
+        'Leaves text and vector graphics untouched; only photos are re-encoded',
+        'A background job the page polls, multipart upload to R2 in 16 MB parts, and a one-time download',
+      ],
+    },
+  ] as CataloguePart[],
+  compactFlow: ['Upload with progress', 'Signature & size check', 'Background job', 'Measure drawn size', 'Resample photos', 'R2 multipart upload', 'Download'],
+  extractFlow: ['Catalogue tree & prices', 'Pack pages', 'Build sequence', 'Number contents', 'Load photos', 'Print to PDF'],
+  before: [
+    'Pages arranged by hand around each category',
+    'Product names and prices typed onto every flyer',
+    'A finished PDF of about 300 MB, too big to send',
+  ],
+  after: [
+    'Pages packed from the database, contents numbered from the final order',
+    'Pick a SKU and the overlay fills itself from the price list',
+    'Compact in the same portal: upload, wait, download about 30 MB',
+  ],
+  architecture: [
+    ['Frontend', 'Next.js App Router, React and TypeScript (strict), Tailwind CSS, print CSS for the A4 pages'],
+    ['Backend', 'Next.js route handlers with JWT cookie authentication and role checks'],
+    ['Data', 'PostgreSQL: catalogue tree, products and prices from the ERP mirror, settings as JSONB'],
+    ['Storage', 'Cloudflare R2 through the S3 API: images, documents and flyers in separate buckets'],
+    ['PDF', 'pdf-lib to read and rewrite the PDF, sharp to resample and re-encode photos'],
+  ] as [string, string][],
+  decisions: [
+    ['Lay out in the browser', 'The catalogue is HTML and CSS sized in millimetres, so what staff see while editing is what prints.'],
+    ['Compress to the printed size', 'A photo drawn 4 cm wide doesn’t need a 4,000-pixel source, so Compact works out how big each image is on the page before resampling it.'],
+    ['Store overlays as fractions', 'Focal positions are 0–1 of the flyer’s width and height, so the same layout works on screen, in the preview and in print.'],
+    ['Never overwrite, soft delete', 'Flyers get unique names and deleted ones move aside, so a mistake can be undone and a catalogue never loses its artwork.'],
+  ] as [string, string][],
+  role: [
+    'I’m a junior full-stack developer in a two-person development team; my development manager reviews my pull requests. The portal itself existed before I joined. Before October 2026 I built Flyers, Focals and the first version of PDF Extract.',
+    'In October 2026 I extended PDF Extract and Flyers and built Compact with an AI coding assistant (Claude). I wrote the requirements, reviewed, rejected and accepted designs, and tested the output; the assistant wrote much of that code.',
   ],
   limits: [
-    'OSM house numbers are patchy on many UK streets, so about a fifth of customers stay at street level. AddressBase would close most of that gap, but it’s paid.',
-    'Land Registry parcels cover England and Wales only; Scottish shops fall back to slicing or a pin.',
-    'Next: a monthly OSM refresh, Overture Places as an extra prospect source, and route planning for sales visits.',
+    'Compression jobs live in the server’s memory: a restart loses a running job.',
+    'Focal prices are captured when a product is placed, not re-read at print time.',
+    'The editor and the export page are large single components, with their state kept locally.',
   ],
-  privacy: 'Customer names, account codes, counts, locations and financial figures are left out. The map here is an illustration, not real data.',
+  next: [
+    'Move compression jobs to a durable queue with the file streamed from storage',
+    'Automated tests for page packing, contents numbering and compression',
+    'Re-read focal prices at print time and save focals in one transaction',
+  ],
+  learned:
+    'Print is unforgiving: a layout that looks right on screen still has to land on the exact millimetre on paper. Most of the work was making the page maths, the photos and the file size hold up for a 200-page document, not one page.',
+  privacy:
+    'The catalogue in the animation is an illustration: the company, products and prices are made up. The real catalogue and its data are internal.',
 }

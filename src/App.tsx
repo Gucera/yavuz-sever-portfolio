@@ -278,7 +278,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [close, openIdx, folderOpen, spot, editMode])
 
-  // Every tab has its own address (/quick-label…). The History API changes the URL without
+  // Every tab has its own address (/wholesale-ops-portal…). The History API changes the URL without
   // loading a new page, so nothing re-renders or replays. Shared links open the right tab and
   // the browser/phone back button closes it.
   useEffect(() => {

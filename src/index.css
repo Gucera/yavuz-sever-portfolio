@@ -6,7 +6,7 @@
 @import './styles/04-tab-education.css';
 @import './styles/05-tab-experience.css';
 @import './styles/06-tab-case-study.css';
-@import './styles/07-tab-nisa.css';
+@import './styles/07-shared-panels.css';
 @import './styles/08-tab-dimark.css';
 @import './styles/09-tab-candy.css';
 @import './styles/10-tab-about.css';
@@ -22,7 +22,7 @@
 @import './styles/22-spotlight.css';
 @import './styles/23-card-back.css';
 @import './styles/24-shuffle-toast.css';
-@import './styles/25-tab-uk-map.css';
+@import './styles/25-customer-map.css';
 @import './styles/26-header-buttons.css';
 @import './styles/27-terminal.css';
 @import './styles/28-mail-note.css';
@@ -30,3 +30,5 @@
 @import './styles/31-header-tablet.css';
 @import './styles/33-explore.css';
 @import './styles/34-project.css';
+@import './styles/35-tab-portal.css';
+@import './styles/36-tab-catalogue.css';

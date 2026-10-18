@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, Fragment, useContext, useState, type ReactNode } from 'react'
 import { Icon } from './Icon'
 
 /**
@@ -63,5 +63,23 @@ export function Details({ children, label = 'Technical details' }: { children: R
       </button>
       {open && <div className="more__body">{children}</div>}
     </div>
+  )
+}
+
+/** A workflow drawn as a row of steps with arrows; the main one is highlighted. */
+export function Flow({ steps, main }: { steps: string[]; main?: boolean }) {
+  return (
+    <ol className={`cs__flow${main ? ' cs__flow--main' : ''}`}>
+      {steps.map((step, i) => (
+        <Fragment key={step}>
+          {i > 0 && (
+            <li className="cs__arrow" aria-hidden>
+              →
+            </li>
+          )}
+          <li className="cs__node">{step}</li>
+        </Fragment>
+      ))}
+    </ol>
   )
 }

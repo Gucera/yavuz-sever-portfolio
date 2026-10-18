@@ -1,39 +1,4 @@
-/* ---------- uk customer map (clay card, purple + lime) ---------- */
-
-.ukm {
-  --ukm-purple: #6a59b5;
-  --ukm-lime: #c3dc68;
-  --ukm-line: rgba(35, 33, 43, 0.18);
-}
-.ukm .exp__headline,
-.ukm .panel__label,
-.ukm .card__meta dt {
-  color: var(--ukm-purple);
-}
-.ukm .panel,
-.ukm .card__meta,
-.ukm .card__meta dt,
-.ukm .card__meta dd {
-  border-color: var(--ukm-line);
-}
-.ukm .exp__num {
-  background: var(--ukm-purple);
-  color: #fff;
-}
-.ukm .cs__features li {
-  background: #fbfaf7;
-}
-.ukm .cs__dark {
-  background: #23212b;
-  color: #ece6da;
-  border-color: #23212b;
-}
-.ukm .cs__dark .panel__label {
-  color: var(--ukm-lime);
-}
-.ukm .card__next {
-  color: var(--ukm-purple);
-}
+/* ---------- customer map illustration and map deep dive (portal tab) ---------- */
 
 /* the map illustration */
 .ukmap {

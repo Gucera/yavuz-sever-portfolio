@@ -44,7 +44,6 @@
 
 @media (max-width: 767px) {
   .cs__features,
-  .nisa__principles,
   .exp__focus {
     grid-template-columns: minmax(0, 1fr);
   }

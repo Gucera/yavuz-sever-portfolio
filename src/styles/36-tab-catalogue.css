@@ -1,0 +1,467 @@
+/* ---------- catalogue maker (paper card, print red accent) ---------- */
+
+.catm {
+  --cm: #b8361e;
+  --cm-ink: #2a1a10;
+  --cm-line: rgba(42, 26, 16, 0.16);
+  --pg: var(--cm); /* the shared note lists take their marker colour from this */
+}
+.catm .exp__headline,
+.catm .panel__label,
+.catm .card__meta dt,
+.catm .card__next {
+  color: var(--cm);
+}
+.catm .panel,
+.catm .card__meta,
+.catm .card__meta dt,
+.catm .card__meta dd {
+  border-color: var(--cm-line);
+}
+.catm .exp__num {
+  background: var(--cm);
+  color: #fff;
+}
+.catm .cs__features li {
+  background: rgba(255, 255, 255, 0.55);
+}
+.catm .cs__dark {
+  background: var(--cm-ink);
+  color: #f6ecdc;
+  border-color: var(--cm-ink);
+}
+.catm .cs__dark .panel__label,
+.catm .cs__dark .cs__quote {
+  color: #f4a58f;
+}
+
+/* the four tools */
+.catm__parts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.catm__parts > li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+}
+.catm__parts h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+}
+.catm__parts em {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cm);
+}
+.catm__parts p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.catm__parts .cs__impact {
+  font-size: 13.5px;
+}
+
+/* ---------- the self-scrolling catalogue ---------- */
+
+.catm__hero {
+  display: flex;
+  justify-content: center;
+}
+
+.catv {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.catv__frame {
+  border-radius: 14px;
+  overflow: hidden;
+  background: #3a3532;
+  box-shadow: 0 26px 50px rgba(42, 26, 16, 0.28);
+}
+
+.catv__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  background: #24201e;
+  color: #e9e1d6;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.catv__bar > span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #5a524c;
+}
+.catv__bar em {
+  flex: 1;
+  min-width: 0;
+  margin-left: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: normal;
+  opacity: 0.8;
+}
+.catv__bar b {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #3a3532;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.catv__body {
+  display: flex;
+  height: 440px;
+}
+
+/* page thumbnails, the current one outlined */
+.catv__rail {
+  flex: none;
+  width: 52px;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: #2e2a27;
+  overflow: hidden;
+}
+.catv__thumb {
+  flex: none;
+  width: 26px;
+  aspect-ratio: 210 / 297;
+  border-radius: 2px;
+  background: #f7f3ec;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  opacity: 0.55;
+  transition:
+    outline-color 0.3s,
+    opacity 0.3s;
+}
+.catv__thumb.is-on {
+  outline-color: var(--cm);
+  opacity: 1;
+}
+.catv__thumb--flyer {
+  background: #f08a5d;
+}
+.catv__thumb--category {
+  background: #5a7fb8;
+}
+.catv__thumb--cover,
+.catv__thumb--back {
+  background: var(--cm-ink);
+  box-shadow: inset 0 0 0 1px #6b5b50;
+}
+
+.catv__window {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.catv__track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 0;
+  will-change: transform;
+}
+.catv__page {
+  width: min(290px, calc(100% - 28px));
+  aspect-ratio: 210 / 297;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  container-type: inline-size;
+}
+
+/* ---------- one A4 page; sizes are in container units so the page scales as a whole ---------- */
+
+.catp {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2.4cqw;
+  padding: 6cqw 6cqw 8cqw;
+  background: #fffdf8;
+  color: #2a1a10;
+  font-size: 3.4cqw;
+  line-height: 1.25;
+  overflow: hidden;
+}
+.catp__foot {
+  position: absolute;
+  bottom: 3cqw;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 3cqw;
+  opacity: 0.6;
+}
+.catp__brand {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  font-size: 4cqw;
+}
+.catp__small {
+  font-family: var(--font-mono);
+  font-size: 3cqw;
+  opacity: 0.75;
+}
+
+.catp--cover,
+.catp--back {
+  background: var(--cm-ink, #2a1a10);
+  color: #f6ecdc;
+  justify-content: space-between;
+}
+.catp--cover strong {
+  margin-top: 10cqw;
+  font-size: 13cqw;
+  line-height: 0.95;
+  font-weight: 700;
+}
+.catp--cover em {
+  font-style: normal;
+  font-size: 6cqw;
+  color: #f4a58f;
+}
+.catp__stack {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3cqw;
+  margin-top: auto;
+}
+.catp__stack i {
+  aspect-ratio: 1;
+  border-radius: 3cqw;
+}
+.catp--back {
+  justify-content: center;
+  align-items: center;
+  gap: 4cqw;
+}
+
+.catp--contents strong {
+  font-size: 9cqw;
+  margin-bottom: 4cqw;
+}
+.catp--contents ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4cqw;
+  font-size: 4.2cqw;
+}
+.catp--contents li {
+  display: flex;
+  align-items: baseline;
+  gap: 2cqw;
+}
+.catp--contents li i {
+  flex: 1;
+  border-bottom: 0.6cqw dotted rgba(42, 26, 16, 0.4);
+}
+.catp--contents li b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.catp--flyer {
+  color: #fff;
+}
+.catp--flyer em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 3.6cqw;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.catp--flyer strong {
+  font-size: 14cqw;
+  line-height: 0.95;
+  font-weight: 800;
+}
+.catp__focals {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4cqw;
+}
+.catp__focal {
+  position: relative;
+  padding: 2.4cqw;
+  border-radius: 2cqw;
+  background: #fff;
+  color: #2a1a10;
+  outline: 0.8cqw dashed transparent;
+  outline-offset: 1cqw;
+  animation: catp-focal 3.2s ease-in-out infinite;
+}
+.catp__focal:nth-child(2) {
+  animation-delay: 1.1s;
+}
+.catp__focal:nth-child(3) {
+  animation-delay: 2.2s;
+}
+.catp__qr {
+  position: absolute;
+  top: 3cqw;
+  right: 3cqw;
+  width: 8cqw;
+  height: 8cqw;
+  background:
+    repeating-linear-gradient(90deg, #2a1a10 0 1.3cqw, transparent 1.3cqw 2.4cqw),
+    repeating-linear-gradient(0deg, #fff 0 1.1cqw, transparent 1.1cqw 2.1cqw);
+  background-blend-mode: screen;
+  outline: 0.6cqw solid #fff;
+}
+/* a selected overlay, as in the Focals editor */
+@keyframes catp-focal {
+  0%,
+  60%,
+  100% {
+    outline-color: transparent;
+  }
+  20%,
+  45% {
+    outline-color: #fff;
+  }
+}
+
+.catp--category {
+  color: #fff;
+  justify-content: flex-end;
+  padding-bottom: 16cqw;
+}
+.catp--category em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 3.6cqw;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.8;
+}
+.catp--category strong {
+  font-size: 16cqw;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.catp--grid {
+  gap: 2cqw;
+}
+.catp__band {
+  margin: -6cqw -6cqw 1cqw;
+  padding: 3cqw 6cqw;
+  color: #fff;
+  font-weight: 700;
+  font-size: 4cqw;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.catp__sub {
+  font-weight: 700;
+  font-size: 3.6cqw;
+  border-bottom: 0.4cqw solid rgba(42, 26, 16, 0.2);
+  padding-bottom: 1cqw;
+}
+.catp__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.4cqw;
+}
+.catp__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8cqw;
+  min-width: 0;
+  font-size: 2.6cqw;
+}
+.catp__tile i {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 1.4cqw;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.catp__tile i b {
+  width: 34%;
+  height: 62%;
+  margin-bottom: 12%;
+  border-radius: 1.6cqw 1.6cqw 1cqw 1cqw;
+}
+.catp__tile span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.catp__tile strong {
+  font-family: var(--font-mono);
+  font-size: 3cqw;
+}
+.catp__focal .catp__tile {
+  font-size: 3cqw;
+}
+.catp__focal .catp__tile i {
+  width: 70%;
+}
+.catp__more {
+  margin-top: auto;
+  align-self: flex-end;
+  font-family: var(--font-mono);
+  font-size: 3cqw;
+  color: var(--cm, #b8361e);
+}
+
+.catv__note {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+@media (max-width: 1023px) {
+  .catm__parts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 520px) {
+  .catv__rail {
+    display: none;
+  }
+  .catv__body {
+    height: 400px;
+  }
+}
