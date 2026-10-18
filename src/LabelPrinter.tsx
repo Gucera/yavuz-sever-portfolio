@@ -95,7 +95,7 @@ export function LabelPrinter({ active, title, repo }: Props) {
       viewBox="95 52 480 428"
       preserveAspectRatio="xMidYMid meet"
       role="img"
-      aria-label={`Label printer printing a ${title} label linking to the public demo repository ${repo}`}
+      aria-label={`Label printer printing a ${title} label linking to the public rebuild ${repo}`}
     >
       <defs>
         <pattern id="pr-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)">
@@ -258,7 +258,7 @@ export function LabelPrinter({ active, title, repo }: Props) {
             </text>
             <rect x="268" y="444" width="144" height="20" rx="10" fill="#ff4d1a" stroke="#111" strokeWidth="2" />
             <text x="340" y="458" textAnchor="middle" fontFamily="Space Mono, monospace" fontSize="10" fontWeight="700" fill="#111">
-              ↗ open demo repo
+              ↗ open repo
             </text>
           </a>
         </g>

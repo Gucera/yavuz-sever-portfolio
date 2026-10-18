@@ -40,10 +40,10 @@ export function RunLog({ active }: { active: boolean }) {
           <span className="run__cursor" />
         </li>
       </ol>
-      <a className="run__repo" href={`https://${NISA.demoRepo}`} target="_blank" rel="noreferrer">
+      <a className="run__repo" href={`https://${NISA.repo}`} target="_blank" rel="noreferrer">
         <span>
-          <em>Public demo repository · not the production system</em>
-          {NISA.demoRepo}
+          <em>Public rebuild · not the production system</em>
+          {NISA.repo}
         </span>
         <b>↗</b>
       </a>

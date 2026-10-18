@@ -188,6 +188,7 @@ test('Catalogue Maker shows its four tools and an illustrative catalogue beside 
   await expect(tab.locator('.catv__page').first()).toBeVisible()
   await expect(tab.locator('.catv__count')).toHaveText('1 / 212') // reduced motion: it stays on the cover
   await expect(tab.locator('.catv__note')).toContainText('made-up')
+  await expect(tab.locator('a.catm__repo')).toHaveAttribute('href', 'https://github.com/Gucera/Catalogue-Creator')
 })
 
 test('the customer map keeps Fit UK and Street view behind a Demo button', async ({ page }) => {

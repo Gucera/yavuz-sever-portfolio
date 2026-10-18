@@ -35,6 +35,18 @@
   color: #f4a58f;
 }
 
+/* the GitHub link, in the portal tab's style */
+.catm__repo {
+  background: var(--cm-ink);
+  color: #f6ecdc;
+}
+.catm__repo b {
+  color: #f4a58f;
+}
+.catm__repo:hover {
+  background: var(--cm);
+}
+
 /* the four tools */
 .catm__parts {
   list-style: none;

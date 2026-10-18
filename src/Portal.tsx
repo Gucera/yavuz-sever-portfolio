@@ -41,7 +41,7 @@ function ModuleArt({ id, active }: { id: PortalModule['id']; active: boolean }) 
           <div className="media cs__image cs__image--art">
             <LabelPrinter active={on} title="Quick Label" repo={PORTAL.labels.repo} />
           </div>
-          <p className="printer-note">The label links to a public demo repository; the production system is internal.</p>
+          <p className="printer-note">The label links to the public rebuild; the production system is internal.</p>
         </div>
       )}
     </div>

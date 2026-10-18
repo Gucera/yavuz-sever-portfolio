@@ -679,14 +679,14 @@ export const PORTAL = {
     ] as [string, string, string][],
   },
   labels: {
-    repo: 'github.com/Gucera/Quick-Label',
+    repo: 'github.com/Gucera/Wholesale-Ops-Portal',
     flows: [
       { label: 'Order-driven printing', steps: ['Order Data', 'Detection', 'Product Matching', 'Validation', 'Print Job', 'Windows Print Agent', 'Label Printer'] },
       { label: 'Mobile barcode printing', steps: ['Phone Barcode Scan', 'Product Lookup', 'Print Request', 'Assigned PC', 'Printer'] },
     ],
   },
   nisa: {
-    demoRepo: 'github.com/Gucera/retail-order-automation',
+    repo: 'github.com/Gucera/Wholesale-Ops-Portal',
     runLog: [
       ['run', '3 orders selected by operator'],
       ['ok', 'order extracted · 53 lines'],
@@ -755,6 +755,7 @@ export type CataloguePart = {
  */
 export const CATALOGUE = {
   subtitle: 'From product database to a printable catalogue',
+  repo: 'github.com/Gucera/Catalogue-Creator',
   summary: {
     problem:
       'A trade catalogue of around 2,500 products runs to 200+ A4 pages, with promotional flyers between the sections. Laying it out took manual work, and the exported PDF came to about 300 MB: too big to email or share.',

@@ -401,6 +401,14 @@ export function CatalogueBody({ tab, active, meta, next }: Props) {
         </section>
       </Details>
 
+      <a className="portal__repo catm__repo" href={`https://${d.repo}`} target="_blank" rel="noreferrer" data-reveal>
+        <span>
+          <em>Public repository on GitHub</em>
+          {d.repo}
+        </span>
+        <b aria-hidden>↗</b>
+      </a>
+
       <p className="ukm__privacy" data-reveal>
         {d.privacy}
       </p>
